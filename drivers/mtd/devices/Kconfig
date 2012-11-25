@@ -120,6 +120,25 @@ config MTD_BCM47XXSFLASH
 	  registered by bcma as platform devices. This enables driver for
 	  serial flash memories (only read-only mode is implemented).
 
+config MTD_WMT_SFLASH
+	tristate "WonderMedia Serial Flash Support"
+	depends on MTD
+	help
+	  Enable this option to provide support for the Wondermedia SoC serial
+	  flash controller.
+
+config MTD_WMT_SFLASH_READONLY
+	bool "Disable write support for Wondermedia Serial Flash"
+	depends on MTD_WMT_SFLASH
+	default y
+	help
+	  Select this option to disable write support for Wondermedia SoC
+	  serial flash controller. The option is enabled by default when
+	  selecting Wondermedia Serial Flash Support.
+
+	  WARNING: Incorrectly writing to serial flash may result in an
+	  inability to boot your system.
+
 config MTD_SLRAM
 	tristate "Uncached system RAM"
 	help
