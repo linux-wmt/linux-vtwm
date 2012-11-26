@@ -617,6 +617,16 @@ config KEYBOARD_TWL4030
 	  To compile this driver as a module, choose M here: the
 	  module will be called twl4030_keypad.
 
+config KEYBOARD_WMT_POWER_KEYPAD
+	tristate "Wondermedia Power keypad support"
+	depends on ARCH_VT8500
+	help
+	  Say Y here to enable support for the power button keypad
+	  on Wondermedia 8xxx-series SoCs.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called wmt_power_keypad.
+
 config KEYBOARD_XTKBD
 	tristate "XT keyboard"
 	select SERIO
