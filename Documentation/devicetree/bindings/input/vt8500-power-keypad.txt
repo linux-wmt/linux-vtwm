@@ -1,0 +1,17 @@
+* Wondermedia Power Keypad device tree bindings
+
+Wondermedia SoCs have a single irq-driven power button attached to
+the power management controller.
+
+Required SoC Specific Properties:
+- compatible: should be one of the following
+   - "wm,power-keypad": For all Wondermedia 8xxx-series SoCs.
+- interrupts: should be the power management controller wakeup interrupt.
+- keymap: linux keycode to generate when power button pressed.
+
+Example:
+	powerkey: pwrkey@0 {
+		compatible = "wm,power-keypad";
+		interrupts = <22>;
+		keymap = <116>; /* KEY_POWER */
+	};
