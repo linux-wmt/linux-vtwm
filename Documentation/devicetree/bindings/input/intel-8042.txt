@@ -1,0 +1,29 @@
+* Intel 8042 Keyboard controller
+
+Required properties:
+- compatible: should be "intel,8042"
+- regs: memory for keyboard controller
+- interrupts: two interrupts should be specified (keyboard and aux).
+- command-reg: offset in memory for command register
+- status-reg: offset in memory for status register
+- data-reg: offset in memory for data register
+
+Optional properties:
+- init-reset: Controller should be reset on init and cleanup
+
+Optional linux specific properties:
+- linux,kbd_phys_desc: defaults to i8042/serio0
+- linux,aux_phys_desc: defaults to i8042/serio1
+- linux,mux_phys_desc: defaults to i8042/serio%d
+
+
+Example:
+	keyboard@d8008800 {
+		compatible = "intel,8042";
+		reg = <0xD8008800 0x100>;
+		interrupts = <23 4>;
+		command-reg = <0x04>;
+		status-reg = <0x04>;
+		data-reg = <0x00>;
+		mux-ports = <2>;
+	};
