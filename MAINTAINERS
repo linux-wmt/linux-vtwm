@@ -1341,9 +1341,13 @@ M:	Tony Prisk <linux@prisktech.co.nz>
 L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
 S:	Maintained
 F:	arch/arm/mach-vt8500/
+F:	drivers/clk/clk-vt8500.c
 F:	drivers/clocksource/vt8500_timer.c
 F:	drivers/i2c/busses/i2c-wmt.c
+F:	drivers/gpio/gpio-vt8500.c
+F:	drivers/input/keyboard/wmt_power_keypad.c
 F:	drivers/mmc/host/wmt-sdmmc.c
+F:	drivers/mtd/devices/wmt_sflash.c
 F:	drivers/pwm/pwm-vt8500.c
 F:	drivers/rtc/rtc-vt8500.c
 F:	drivers/tty/serial/vt8500_serial.c
