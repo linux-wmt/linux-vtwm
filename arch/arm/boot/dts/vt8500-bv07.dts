@@ -38,3 +38,13 @@
 		};
 	};
 };
+
+&pinctrl {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c>;
+
+	i2c: i2c {
+		wm,pins = <88 89 90 91>;
+		wm,function = <2>;
+	};
+};
