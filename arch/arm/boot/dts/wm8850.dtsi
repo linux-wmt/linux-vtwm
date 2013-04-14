@@ -61,12 +61,6 @@
 				#address-cells = <1>;
 				#size-cells = <0>;
 
-				ref25: ref25M {
-					#clock-cells = <0>;
-					compatible = "fixed-clock";
-					clock-frequency = <25000000>;
-				};
-
 				ref24: ref24M {
 					#clock-cells = <0>;
 					compatible = "fixed-clock";
@@ -75,15 +69,15 @@
 
 				plla: plla {
 					#clock-cells = <0>;
-					compatible = "wm,wm8750-pll-clock";
-					clocks = <&ref25>;
+					compatible = "wm,wm8850-pll-clock";
+					clocks = <&ref24>;
 					reg = <0x200>;
 				};
 
 				pllb: pllb {
 					#clock-cells = <0>;
-					compatible = "wm,wm8750-pll-clock";
-					clocks = <&ref25>;
+					compatible = "wm,wm8850-pll-clock";
+					clocks = <&ref24>;
 					reg = <0x204>;
 				};
 
