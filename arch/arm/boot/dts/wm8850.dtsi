@@ -81,6 +81,62 @@
 					reg = <0x204>;
 				};
 
+				pllc: pllc {
+					#clock-cells = <0>;
+					compatible = "wm,wm8850-pll-clock";
+					clocks = <&ref24>;
+					reg = <0x208>;
+				};
+
+				plld: plld {
+					#clock-cells = <0>;
+					compatible = "wm,wm8850-pll-clock";
+					clocks = <&ref24>;
+					reg = <0x20C>;
+				};
+
+				plle: plle {
+					#clock-cells = <0>;
+					compatible = "wm,wm8850-pll-clock";
+					clocks = <&ref24>;
+					reg = <0x210>;
+				};
+
+				pllf: pllf {
+					#clock-cells = <0>;
+					compatible = "wm,wm8850-pll-clock";
+					clocks = <&ref24>;
+					reg = <0x214>;
+				};
+
+				pllg: pllg {
+					#clock-cells = <0>;
+					compatible = "wm,wm8850-pll-clock";
+					clocks = <&ref24>;
+					reg = <0x218>;
+				};
+
+				clkarm: arm {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&plla>;
+					divisor-reg = <0x300>;
+				};
+
+				clkahb: ahb {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&pllb>;
+					divisor-reg = <0x304>;
+				};
+
+				clkddr: ddr {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&plld>;
+					divisor-reg = <0x310>;
+				};
+
 				clkuart0: uart0 {
 					#clock-cells = <0>;
 					compatible = "via,vt8500-device-clock";
@@ -166,6 +222,15 @@
 					divisor-reg = <0x3A8>;
 					enable-reg = <0x250>;
 					enable-bit = <10>;
+				};
+
+				clki2c3: i2c3clk {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&pllb>;
+					divisor-reg = <0x3AC>;
+					enable-reg = <0x250>;
+					enable-bit = <12>;
 				};
 			};
 		};
