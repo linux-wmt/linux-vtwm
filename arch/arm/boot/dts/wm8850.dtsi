@@ -19,6 +19,7 @@
 		i2c0 = &i2c_0;
 		i2c1 = &i2c_1;
 		i2c2 = &i2c_2;
+		i2c3 = &i2c_3;
 	};
 
 	soc {
@@ -346,6 +347,14 @@
 			reg = <0xd83A0000 0x1000>;
 			interrupts = <7>;
 			clocks = <&clki2c2>;
+			clock-frequency = <400000>;
+		};
+
+		i2c_3: i2c@d83b0000 {
+			compatible = "wm,wm8505-i2c";
+			reg = <0xd83B0000 0x1000>;
+			interrupts = <15>;
+			clocks = <&clki2c3>;
 			clock-frequency = <400000>;
 		};
 	};
