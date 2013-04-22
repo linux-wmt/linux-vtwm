@@ -11,6 +11,16 @@
 / {
 	compatible = "wm,wm8650";
 
+	cpus {
+		#size-cells = <0>;
+		#address-cells = <1>;
+
+		cpu {
+			device_type = "cpu";
+			compatible = "arm,arm926";
+		};
+	};
+
 	aliases {
 		i2c0 = &i2c_0;
 		i2c1 = &i2c_1;

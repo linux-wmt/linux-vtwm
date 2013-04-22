@@ -11,6 +11,16 @@
 / {
 	compatible = "via,vt8500";
 
+	cpus {
+		#size-cells = <0>;
+		#address-cells = <1>;
+
+		cpu {
+			device_type = "cpu";
+			compatible = "arm,arm926";
+		};
+	};
+
 	soc {
 		#address-cells = <1>;
 		#size-cells = <1>;
