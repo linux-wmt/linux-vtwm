@@ -78,38 +78,44 @@
 					clock-frequency = <24000000>;
 				};
 
+				ref25: ref25M {
+					#clock-cells = <0>;
+					compatible = "fixed-clock";
+					clock-frequency = <25000000>;
+				};
+
 				plla: plla {
 					#clock-cells = <0>;
 					compatible = "wm,wm8750-pll-clock";
-					clocks = <&ref24>;
+					clocks = <&ref25>;
 					reg = <0x200>;
 				};
 
 				pllb: pllb {
 					#clock-cells = <0>;
 					compatible = "wm,wm8750-pll-clock";
-					clocks = <&ref24>;
+					clocks = <&ref25>;
 					reg = <0x204>;
 				};
 
 				pllc: pllc {
 					#clock-cells = <0>;
 					compatible = "wm,wm8750-pll-clock";
-					clocks = <&ref24>;
+					clocks = <&ref25>;
 					reg = <0x208>;
 				};
 
 				plld: plld {
 					#clock-cells = <0>;
 					compatible = "wm,wm8750-pll-clock";
-					clocks = <&ref24>;
+					clocks = <&ref25>;
 					reg = <0x20C>;
 				};
 
 				plle: plle {
 					#clock-cells = <0>;
 					compatible = "wm,wm8750-pll-clock";
-					clocks = <&ref24>;
+					clocks = <&ref25>;
 					reg = <0x210>;
 				};
 
