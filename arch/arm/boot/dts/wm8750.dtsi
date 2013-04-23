@@ -140,6 +140,15 @@
 					divisor-reg = <0x310>;
 				};
 
+				clkdvo: dvo {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&pllc>;
+					divisor-reg = <0x36C>;
+					enable-reg = <0x258>;
+					enable-bit = <30>;
+				};
+
 				clkuart0: uart0 {
 					#clock-cells = <0>;
 					compatible = "via,vt8500-device-clock";
