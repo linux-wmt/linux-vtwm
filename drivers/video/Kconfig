@@ -1801,6 +1801,14 @@ config FB_WM8505
 	  integrated LCD controller. This driver covers the WM8505, WM8650
 	  and WM8850 SoCs.
 
+config FB_WM8505_VGA
+	bool "Enable VGA output + Disable LCD output"
+	depends on FB_WM8505
+	help
+	  Select this option to enable the VGA output on the APC8750.
+	  Do NOT select this option if you have a netbook or tablet, as it
+	  will disable the LCD output.
+
 config FB_WMT_GE_ROPS
 	bool "VT8500/WM8xxx accelerated raster ops support"
 	depends on (FB = y) && (FB_VT8500 || FB_WM8505)
