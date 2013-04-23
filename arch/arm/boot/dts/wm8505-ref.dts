@@ -55,3 +55,7 @@
 		wm,function = <2>;
 	};
 };
+
+&uart0 {
+	status = "okay";
+};
