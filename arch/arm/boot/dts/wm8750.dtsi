@@ -360,5 +360,11 @@
 			clocks = <&clki2c1>;
 			clock-frequency = <400000>;
 		};
+
+		eth0@d8320000 {
+			compatible = "via,velocity-vt6110";
+			reg = <0xd8004000 0x400>;
+			interrupts = <10>;
+		};
 	};
 };
