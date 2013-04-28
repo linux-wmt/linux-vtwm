@@ -1265,7 +1265,7 @@ struct velocity_context {
 #define PHYID_VT3216_64BIT  0x000FC600UL
 #define PHYID_MARVELL_1000  0x01410C50UL
 #define PHYID_MARVELL_1000S 0x01410C40UL
-
+#define PHYID_ICPLUS_IP101A 0x02430C54UL
 #define PHYID_REV_ID_MASK   0x0000000FUL
 
 #define PHYID_GET_PHY_ID(i)         ((i) & ~PHYID_REV_ID_MASK)
@@ -1433,10 +1433,38 @@ struct velocity_opt {
 
 #define GET_RD_BY_IDX(vptr, idx)   (vptr->rd_ring[idx])
 
+static inline char velocity_choose_state(struct device *dev,
+					   pm_message_t state)
+
+{
+	switch (state.event) {
+	case PM_EVENT_ON:
+		return PCI_D0;
+	case PM_EVENT_FREEZE:
+	case PM_EVENT_PRETHAW:
+		/* REVISIT both freeze and pre-thaw "should" use D0 */
+	case PM_EVENT_SUSPEND:
+	case PM_EVENT_HIBERNATE:
+		return PCI_D3hot;
+	default:
+		dev_info(dev, "unrecognized suspend event %d\n", state.event);
+		BUG();
+	}
+
+	return PCI_D0;
+}
+
+enum velocity_bus_type {
+	BUS_PCI,
+	BUS_PLATFORM,
+};
+
 struct velocity_info {
-	struct device *dev;
 	struct pci_dev *pdev;
+	struct device *dev;
 	struct net_device *netdev;
+	enum velocity_bus_type bustype;
+	int no_eeprom;
 
 	unsigned long active_vlans[BITS_TO_LONGS(VLAN_N_VID)];
 	u8 ip_addr[4];
