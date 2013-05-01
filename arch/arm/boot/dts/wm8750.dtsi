@@ -12,12 +12,12 @@
 	compatible = "wm,wm8750";
 
 	cpus {
+		#address-cells = <0>;
 		#size-cells = <0>;
-		#address-cells = <1>;
 
 		cpu {
 			device_type = "cpu";
-			compatible = "arm,arm1176";
+			compatible = "arm,arm1176ej-s";
 		};
 	};
 

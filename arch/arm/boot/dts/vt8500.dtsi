@@ -12,12 +12,12 @@
 	compatible = "via,vt8500";
 
 	cpus {
+		#address-cells = <0>;
 		#size-cells = <0>;
-		#address-cells = <1>;
 
 		cpu {
 			device_type = "cpu";
-			compatible = "arm,arm926";
+			compatible = "arm,arm926ej-s";
 		};
 	};
 
