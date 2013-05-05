@@ -22,6 +22,13 @@
 		brightness-levels = <0 40 60 80 100 130 190 255>;
 		default-brightness-level = <5>;
 	};
+
+	powerkey: pwrkey@0 {
+		compatible = "wm,power-keypad";
+		interrupt-parent = <&intc0>;
+		interrupts = <22>;
+		keymap = <116>; /* KEY_POWER */
+	};
 };
 
 &fb {

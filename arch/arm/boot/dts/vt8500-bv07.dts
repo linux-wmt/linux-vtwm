@@ -11,6 +11,14 @@
 
 / {
 	model = "Benign BV07 Netbook";
+
+	backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pwm 0 50000>;
+
+		brightness-levels = <0 4 8 16 32 64 128 255>;
+		default-brightness-level = <5>;
+	};
 };
 
 &fb {
