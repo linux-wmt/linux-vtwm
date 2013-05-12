@@ -365,6 +365,7 @@
 			compatible = "via,velocity-vt6110";
 			reg = <0xd8004000 0x400>;
 			interrupts = <10>;
+			no-eeprom;
 		};
 	};
 };
