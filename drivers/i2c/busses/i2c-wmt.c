@@ -3,12 +3,13 @@
  *
  *  Copyright (C) 2012 Tony Prisk <linux@prisktech.co.nz>
  *
- *  Derived from GPL licensed source:
+ *  Derived from GPLv2+ licensed source:
  *  - Copyright (C) 2008 WonderMedia Technologies, Inc.
  *
  *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License version 2 as
- *  published by the Free Software Foundation
+ *  it under the terms of the GNU General Public License version 2, or
+ *  (at your option) any later version. as published by the Free Software
+ *  Foundation
  */
 
 #include <linux/clk.h>
@@ -69,10 +70,13 @@
 #define CSR_RCV_ACK_MASK	0x0001
 #define CSR_READY_MASK		0x0002
 
+/* REG_TR */
+#define SCL_TIMEOUT(x)		(((x) & 0xFF) << 16)
+#define TR_STD			0x0064
+#define TR_HS			0x0019
+
 #define I2C_MODE_STANDARD	0
 #define I2C_MODE_FAST		1
-
-
 
 struct wmt_i2c_dev {
 	struct i2c_adapter	adapter;
@@ -91,7 +95,7 @@ static int wmt_i2c_wait_bus_not_busy(struct wmt_i2c_dev *i2c_dev)
 	int i;
 	int ret = 0;
 
-	for (i = 0; i < 10000000; i++) {
+	for (i = 0; i < 100000; i++) {
 		val = readw(i2c_dev->base + REG_CSR);
 		if (val & CSR_READY_MASK)
 			break;
@@ -121,27 +125,28 @@ static int wmt_i2c_write(struct i2c_adapter *adap, struct i2c_msg *pmsg,
 						   int restart, int last)
 {
 	struct wmt_i2c_dev *i2c_dev = i2c_get_adapdata(adap);
-	u16 val;
-	u16 tcr_val;
-	int ret;
-	int wait_result;
-	u32 xfer_len = 0;
+	u16 val, tcr_val;
+	int ret, wait_result;
+	int xfer_len = 0;
 
-	if (pmsg->len < 0)
-		return -EINVAL;
-
-	if (restart == 0) {
+	if (!restart) {
 		ret = wmt_i2c_wait_bus_not_busy(i2c_dev);
 		if (ret < 0)
 			return ret;
 	}
 
-	if (pmsg->len == 0)
+	if (pmsg->len == 0) {
+		/*
+		 * We still need to run through the while (..) once, so
+		 * start at -1 and break out early from the loop
+		 */
+		xfer_len = -1;
 		writew(0, i2c_dev->base + REG_CDR);
-	else
+	} else {
 		writew(pmsg->buf[0] & 0xFF, i2c_dev->base + REG_CDR);
+	}
 
-	if (restart == 0) {
+	if (!restart) {
 		val = readw(i2c_dev->base + REG_CR);
 		val &= ~CR_TX_END;
 		writew(val, i2c_dev->base + REG_CR);
@@ -162,35 +167,29 @@ static int wmt_i2c_write(struct i2c_adapter *adap, struct i2c_msg *pmsg,
 
 	writew(tcr_val, i2c_dev->base + REG_TCR);
 
-	if (restart == 1) {
+	if (restart) {
 		val = readw(i2c_dev->base + REG_CR);
 		val |= CR_CPU_RDY;
 		writew(val, i2c_dev->base + REG_CR);
 	}
 
-	ret = 0;
+	while (xfer_len < pmsg->len) {
+		wait_result = wait_for_completion_timeout(&i2c_dev->complete,
+							  500 * HZ / 1000);
 
-	for (;;) {
-		wait_result = wait_for_completion_interruptible_timeout(
-				&i2c_dev->complete, 500 * HZ / 1000);
-
-		if (wait_result == 0) {
-			dev_dbg(i2c_dev->dev, "wait timeout (tx)\n");
-			ret = -ETIMEDOUT;
-			break;
-		}
+		if (wait_result == 0)
+			return -ETIMEDOUT;
 
 		ret = wmt_check_status(i2c_dev);
 		if (ret)
-			break;
+			return ret;
 
 		xfer_len++;
 
 		val = readw(i2c_dev->base + REG_CSR);
 		if ((val & CSR_RCV_ACK_MASK) == CSR_RCV_NOT_ACK) {
 			dev_dbg(i2c_dev->dev, "write RCV NACK error\n");
-			ret = -EIO;
-			break;
+			return -EIO;
 		}
 
 		if (pmsg->len == 0) {
@@ -199,38 +198,28 @@ static int wmt_i2c_write(struct i2c_adapter *adap, struct i2c_msg *pmsg,
 			break;
 		}
 
-		if (pmsg->len > xfer_len) {
+		if (xfer_len == pmsg->len) {
+			if (last != 1)
+				writew(CR_ENABLE, i2c_dev->base + REG_CR);
+		} else {
 			writew(pmsg->buf[xfer_len] & 0xFF, i2c_dev->base +
 								REG_CDR);
 			writew(CR_CPU_RDY | CR_ENABLE, i2c_dev->base + REG_CR);
-		} else if (pmsg->len == xfer_len) {
-			if (last != 1)
-				writew(CR_ENABLE, i2c_dev->base + REG_CR);
-			break;
-		} else {
-			dev_dbg(i2c_dev->dev, "unknown error (tx)\n");
-			ret = -EIO;
-			break;
 		}
 	}
 
-	return ret;
+	return 0;
 }
 
 static int wmt_i2c_read(struct i2c_adapter *adap, struct i2c_msg *pmsg,
 						  int restart, int last)
 {
 	struct wmt_i2c_dev *i2c_dev = i2c_get_adapdata(adap);
-	u16 val;
-	u16 tcr_val;
-	int ret;
-	int wait_result;
+	u16 val, tcr_val;
+	int ret, wait_result;
 	u32 xfer_len = 0;
 
-	if (pmsg->len <= 0)
-		return -EINVAL;
-
-	if (restart == 0) {
+	if (!restart) {
 		ret = wmt_i2c_wait_bus_not_busy(i2c_dev);
 		if (ret < 0)
 			return ret;
@@ -244,7 +233,7 @@ static int wmt_i2c_read(struct i2c_adapter *adap, struct i2c_msg *pmsg,
 	val &= ~CR_TX_NEXT_NO_ACK;
 	writew(val, i2c_dev->base + REG_CR);
 
-	if (restart == 0) {
+	if (!restart) {
 		val = readw(i2c_dev->base + REG_CR);
 		val |= CR_CPU_RDY;
 		writew(val, i2c_dev->base + REG_CR);
@@ -267,50 +256,38 @@ static int wmt_i2c_read(struct i2c_adapter *adap, struct i2c_msg *pmsg,
 
 	writew(tcr_val, i2c_dev->base + REG_TCR);
 
-	if (restart == 1) {
+	if (restart) {
 		val = readw(i2c_dev->base + REG_CR);
 		val |= CR_CPU_RDY;
 		writew(val, i2c_dev->base + REG_CR);
 	}
 
-	ret = 0;
+	while (xfer_len < pmsg->len) {
+		wait_result = wait_for_completion_timeout(&i2c_dev->complete,
+							  500 * HZ / 1000);
 
-	for (;;) {
-		wait_result = wait_for_completion_interruptible_timeout(
-				&i2c_dev->complete, 500 * HZ / 1000);
-
-		if (wait_result == 0) {
-			dev_dbg(i2c_dev->dev, "wait timeout (tx)\n");
-			ret = -ETIMEDOUT;
-			break;
-		}
+		if (!wait_result)
+			return -ETIMEDOUT;
 
 		ret = wmt_check_status(i2c_dev);
 		if (ret)
-			break;
+			return ret;
 
 		pmsg->buf[xfer_len] = readw(i2c_dev->base + REG_CDR) >> 8;
 		xfer_len++;
 
-		if (pmsg->len > xfer_len) {
-			if (pmsg->len - 1 == xfer_len) {
-				val = readw(i2c_dev->base + REG_CR);
-				val |= (CR_TX_NEXT_NO_ACK | CR_CPU_RDY);
-				writew(val, i2c_dev->base + REG_CR);
-			} else {
-				val = readw(i2c_dev->base + REG_CR);
-				val |= CR_CPU_RDY;
-				writew(val, i2c_dev->base + REG_CR);
-			}
-		} else if (pmsg->len == xfer_len) {
-			break;
+		if (xfer_len == pmsg->len - 1) {
+			val = readw(i2c_dev->base + REG_CR);
+			val |= (CR_TX_NEXT_NO_ACK | CR_CPU_RDY);
+			writew(val, i2c_dev->base + REG_CR);
 		} else {
-			ret = -EIO;
-			break;
+			val = readw(i2c_dev->base + REG_CR);
+			val |= CR_CPU_RDY;
+			writew(val, i2c_dev->base + REG_CR);
 		}
 	}
 
-	return ret;
+	return 0;
 }
 
 static int wmt_i2c_xfer(struct i2c_adapter *adap,
@@ -318,10 +295,8 @@ static int wmt_i2c_xfer(struct i2c_adapter *adap,
 			int num)
 {
 	struct i2c_msg *pmsg;
-	int i;
+	int i, is_last, restart;
 	int ret = 0;
-	int is_last;
-	int restart;
 
 	for (i = 0; ret >= 0 && i < num; i++) {
 		is_last = ((i + 1) == num);
@@ -336,15 +311,12 @@ static int wmt_i2c_xfer(struct i2c_adapter *adap,
 			ret = wmt_i2c_write(adap, pmsg, restart, is_last);
 	}
 
-	if (ret < 0)
-		return ret;
-	else
-		return i;
+	return (ret < 0) ? ret : i;
 }
 
 static u32 wmt_i2c_func(struct i2c_adapter *adap)
 {
-	return I2C_FUNC_I2C | I2C_FUNC_SMBUS_EMUL;
+	return I2C_FUNC_I2C | I2C_FUNC_SMBUS_EMUL | I2C_FUNC_NOSTART;
 }
 
 static const struct i2c_algorithm wmt_i2c_algo = {
@@ -390,30 +362,24 @@ static int wmt_i2c_reset_hardware(struct wmt_i2c_dev *i2c_dev)
 	writew(ISR_WRITE_ALL, i2c_dev->base + REG_ISR);
 
 	if (i2c_dev->mode == I2C_MODE_STANDARD)
-		writew(0x8064, i2c_dev->base + REG_TR);
+		writew(SCL_TIMEOUT(128) | TR_STD, i2c_dev->base + REG_TR);
 	else
-		writew(0x8019, i2c_dev->base + REG_TR);
+		writew(SCL_TIMEOUT(128) | TR_HS, i2c_dev->base + REG_TR);
 
 	return 0;
 }
 
 static int wmt_i2c_probe(struct platform_device *pdev)
 {
-	struct device_node	*np = pdev->dev.of_node;
-	struct wmt_i2c_dev	*i2c_dev;
-	struct i2c_adapter	*adap;
-	struct resource		*res;
+	struct device_node *np = pdev->dev.of_node;
+	struct wmt_i2c_dev *i2c_dev;
+	struct i2c_adapter *adap;
+	struct resource *res;
 	int err;
 	u32 clk_rate;
 
 	if (!np) {
 		dev_err(&pdev->dev, "device node not found\n");
-		return -ENODEV;
-	}
-
-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	if (!res) {
-		dev_err(&pdev->dev, "no memory resource defined\n");
 		return -ENODEV;
 	}
 
@@ -423,11 +389,10 @@ static int wmt_i2c_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 
-	i2c_dev->base = devm_request_and_ioremap(&pdev->dev, res);
-	if (!i2c_dev->base) {
-		dev_err(&pdev->dev, "memory region unavailable\n");
-		return -ENOMEM;
-	}
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	i2c_dev->base = devm_ioremap_resource(&pdev->dev, res);
+	if (IS_ERR(i2c_dev->base))
+		return PTR_ERR(i2c_dev->base);
 
 	i2c_dev->irq = irq_of_parse_and_map(np, 0);
 	if (!i2c_dev->irq) {
@@ -458,12 +423,12 @@ static int wmt_i2c_probe(struct platform_device *pdev)
 	adap = &i2c_dev->adapter;
 	i2c_set_adapdata(adap, i2c_dev);
 	strlcpy(adap->name, "WMT I2C adapter", sizeof(adap->name));
-	adap->owner		= THIS_MODULE;
-	adap->class		= I2C_CLASS_HWMON;
-	adap->algo		= &wmt_i2c_algo;
-	adap->dev.parent	= &pdev->dev;
-	adap->dev.of_node	= pdev->dev.of_node;
-	adap->nr		= of_alias_get_id(pdev->dev.of_node, "i2c");
+	adap->owner = THIS_MODULE;
+	adap->class = I2C_CLASS_HWMON;
+	adap->algo = &wmt_i2c_algo;
+	adap->dev.parent = &pdev->dev;
+	adap->dev.of_node = pdev->dev.of_node;
+	adap->nr = of_alias_get_id(pdev->dev.of_node, "i2c");
 
 	err = wmt_i2c_reset_hardware(i2c_dev);
 	if (err) {
@@ -492,6 +457,9 @@ static int wmt_i2c_remove(struct platform_device *pdev)
 {
 	struct wmt_i2c_dev *i2c_dev = platform_get_drvdata(pdev);
 
+	/* Disable interrupts, clock and delete adapter */
+	writew(0, i2c_dev->base + REG_IMR);
+	clk_disable_unprepare(i2c_dev->clk);
 	i2c_del_adapter(&i2c_dev->adapter);
 
 	return 0;
