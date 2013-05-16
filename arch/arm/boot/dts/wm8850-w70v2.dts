@@ -36,7 +36,7 @@
 	display-timings {
 		native-mode = <&timing0>;
 		timing0: 800x480 {
-			clock-frequency = <0>; /* unused but required */
+			clock-frequency = <33000000>;
 			hactive = <800>;
 			vactive = <480>;
 			hfront-porch = <40>;

@@ -181,6 +181,15 @@
                                         enable-bit = <27>;
                                 };
 
+				clkdvo: dvo {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&pllg>;
+					divisor-reg = <0x370>;
+					enable-reg = <0x258>;
+					enable-bit = <29>;
+				};
+
 				clkpwm: pwm {
 					#clock-cells = <0>;
 					compatible = "via,vt8500-device-clock";
@@ -250,6 +259,7 @@
 		fb: fb@d8051700 {
 			compatible = "wm,wm8505-fb";
 			reg = <0xd8051700 0x200>;
+			clocks = <&clkdvo>;
 		};
 
 		ge_rops@d8050400 {

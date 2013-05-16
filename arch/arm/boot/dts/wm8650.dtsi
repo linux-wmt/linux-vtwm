@@ -94,6 +94,27 @@
 					reg = <0x204>;
 				};
 
+				pllc: pllc {
+					#clock-cells = <0>;
+					compatible = "wm,wm8650-pll-clock";
+					clocks = <&ref25>;
+					reg = <0x208>;
+				};
+
+				plld: plld {
+					#clock-cells = <0>;
+					compatible = "wm,wm8650-pll-clock";
+					clocks = <&ref25>;
+					reg = <0x20C>;
+				};
+
+				plle: plle {
+					#clock-cells = <0>;
+					compatible = "wm,wm8650-pll-clock";
+					clocks = <&ref25>;
+					reg = <0x210>;
+				};
+
 				clkuart0: uart0 {
  					#clock-cells = <0>;
  					compatible = "via,vt8500-device-clock";
@@ -162,6 +183,15 @@
 					enable-reg = <0x250>;
 					enable-bit = <9>;
 				};
+
+				clkdvo: dvo {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&pllc>;
+					divisor-reg = <0x374>;
+					enable-reg = <0x254>;
+					enable-bit = <4>;
+				};
 			};
 		};
 
@@ -224,6 +254,7 @@
 		fb: fb@d8050800 {
 			compatible = "wm,wm8505-fb";
 			reg = <0xd8050800 0x200>;
+			clocks = <&clkdvo>;
 		};
 
 		ge_rops@d8050400 {

@@ -40,15 +40,17 @@
 
 #define DRIVER_NAME "wm8505-fb"
 
+#define INTERFACE_LCD	1
+#define INTERFACE_VGA	2
+
 #define to_wm8505fb_info(__info) container_of(__info, \
 						struct wm8505fb_info, fb)
 struct wm8505fb_info {
-	struct fb_info		fb;
-	void __iomem		*regbase;
-	unsigned int		contrast;
-#ifdef CONFIG_FB_WM8505_VGA
-	struct clk		*clk_dvo;
-#endif
+	struct fb_info fb;
+	void __iomem *regbase;
+	unsigned int contrast;
+	struct clk *clk_dvo;
+	int interface;
 };
 
 
@@ -71,11 +73,10 @@ static int wm8505fb_init_hw(struct fb_info *info)
 	 * 0x31C sets the correct color mode (RGB565) for WM8650
 	 * Bit 8+9 (0x300) are ignored on WM8505 as reserved
 	 */
-#ifdef CONFIG_FB_WM8505_VGA
-	writel(0x338,		       fbi->regbase + WMT_GOVR_COLORSPACE);
-#else
- 	writel(0x31c,		       fbi->regbase + WMT_GOVR_COLORSPACE);
-#endif
+	if (fbi->interface == INTERFACE_VGA)
+		writel(0x338, fbi->regbase + WMT_GOVR_COLORSPACE);
+	else
+	 	writel(0x31c, fbi->regbase + WMT_GOVR_COLORSPACE);
 
 	writel(1,		       fbi->regbase + WMT_GOVR_COLORSPACE1);
 
@@ -86,11 +87,10 @@ static int wm8505fb_init_hw(struct fb_info *info)
 	/* black magic ;) */
 	writel(0xf,		       fbi->regbase + WMT_GOVR_FHI);
 
-#ifdef CONFIG_FB_WM8505_VGA
-	writel(0xe,		       fbi->regbase + WMT_GOVR_DVO_SET);
-#else
- 	writel(4,		       fbi->regbase + WMT_GOVR_DVO_SET);
-#endif
+	if (fbi->interface == INTERFACE_VGA)
+		writel(0xe, fbi->regbase + WMT_GOVR_DVO_SET);
+	else
+	 	writel(4, fbi->regbase + WMT_GOVR_DVO_SET);
 
 	writel(1,		       fbi->regbase + WMT_GOVR_MIF_ENABLE);
 	writel(1,		       fbi->regbase + WMT_GOVR_REG_UPDATE);
@@ -118,17 +118,15 @@ static int wm8505fb_set_timing(struct fb_info *info)
 	writel(h_end,   fbi->regbase + WMT_GOVR_TIMING_H_END);
 	writel(h_all,   fbi->regbase + WMT_GOVR_TIMING_H_ALL);
 	writel(h_sync,  fbi->regbase + WMT_GOVR_TIMING_H_SYNC);
-#ifdef CONFIG_FB_WM8505_VGA
-	writel(h_sync,  fbi->regbase + WMT_VGA_TIMING_H_SYNC);
-#endif
+	if (fbi->interface == INTERFACE_VGA)
+		writel(h_sync,  fbi->regbase + WMT_VGA_TIMING_H_SYNC);
 
 	writel(v_start, fbi->regbase + WMT_GOVR_TIMING_V_START);
 	writel(v_end,   fbi->regbase + WMT_GOVR_TIMING_V_END);
 	writel(v_all,   fbi->regbase + WMT_GOVR_TIMING_V_ALL);
 	writel(v_sync,  fbi->regbase + WMT_GOVR_TIMING_V_SYNC);
-#ifdef CONFIG_FB_WM8505_VGA
-	writel(0x1f80,  fbi->regbase + WMT_VGA_TIMING_V_SYNC);
-#endif
+	if (fbi->interface == INTERFACE_VGA)
+		writel(0x1f80,  fbi->regbase + WMT_VGA_TIMING_V_SYNC);
 
 	writel(1, fbi->regbase + WMT_GOVR_TG);
 
@@ -142,9 +140,8 @@ static int wm8505fb_set_par(struct fb_info *info)
 
 	if (!fbi)
 		return -EINVAL;
-#ifdef CONFIG_FB_WM8505_VGA
+
 	clk_set_rate(fbi->clk_dvo, PICOS2KHZ(info->var.pixclock)*1000);
-#endif
 
 	if (info->var.bits_per_pixel == 32) {
 		info->var.red.offset = 16;
@@ -286,14 +283,15 @@ static struct fb_ops wm8505fb_ops = {
 
 static int wm8505fb_probe(struct platform_device *pdev)
 {
-	struct wm8505fb_info	*fbi;
-	struct resource	*res;
+	struct wm8505fb_info *fbi;
+	struct resource *res;
 	struct display_timings *disp_timing;
-	void			*addr;
+	void *addr;
 	int ret;
 
-	struct fb_videomode	mode;
-	u32			bpp;
+	struct fb_videomode mode;
+	u32 bpp;
+	const char *intf;
 	dma_addr_t fb_mem_phys;
 	unsigned long fb_mem_len;
 	void *fb_mem_virt;
@@ -344,15 +342,21 @@ static int wm8505fb_probe(struct platform_device *pdev)
 	if (ret)
 		return ret;
 
-#ifdef CONFIG_FB_WM8505_VGA
 	fbi->clk_dvo = of_clk_get(pdev->dev.of_node, 0);
 	if (IS_ERR(fbi->clk_dvo)) {
-		dev_err(&pdev->dev, "Error getting clock\n");
+		dev_warn(&pdev->dev, "Error getting clock\n");
 		return PTR_ERR(fbi->clk_dvo);
 	}
 
+	/* default to LCD for backward compatibility */
+	fbi->interface = INTERFACE_LCD;
+	ret = of_property_read_string(pdev->dev.of_node, "output-interface", &intf);
+	if (!ret) {
+		if (!strcmp(intf, "vga"))
+			fbi->interface = INTERFACE_VGA;
+	}
+
 	clk_prepare_enable(fbi->clk_dvo);
-#endif
 
 	fb_videomode_to_var(&fbi->fb.var, &mode);
 

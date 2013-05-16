@@ -18,7 +18,7 @@
 		reg = <0xd8050800 0x200>;
 		bits-per-pixel = <16>;
 		clocks = <&clkdvo>;
-
+		output-interface = "vga";
 		display-timings {
 			native-mode = <&timing0>;
 			timing0: 1024x768 {
