@@ -18,6 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <linux/clk-provider.h>
 #include <linux/clocksource.h>
 #include <linux/io.h>
 #include <linux/irqchip.h>
@@ -32,8 +33,6 @@
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
 #include <linux/of_platform.h>
-
-#include "common.h"
 
 #define LEGACY_GPIO_BASE	0xD8110000
 #define LEGACY_PMC_BASE		0xD8130000
@@ -162,7 +161,7 @@ void __init vt8500_init(void)
 	else
 		pr_err("%s: PMC Hibernation register could not be remapped, not enabling power off!\n", __func__);
 
-	vtwm_clk_init(pmc_base);
+	of_clk_init(NULL);
 
 	of_platform_populate(NULL, of_default_bus_match_table, NULL, NULL);
 }

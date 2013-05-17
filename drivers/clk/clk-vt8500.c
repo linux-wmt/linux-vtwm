@@ -19,6 +19,7 @@
 #include <linux/bitops.h>
 #include <linux/clkdev.h>
 #include <linux/clk-provider.h>
+#include <linux/of_address.h>
 
 /* All clocks share the same lock as none can be changed concurrently */
 static DEFINE_SPINLOCK(_lock);
@@ -56,6 +57,28 @@ static void __iomem *pmc_base;
 #define to_clk_device(_hw) container_of(_hw, struct clk_device, hw)
 
 #define VT8500_PMC_BUSY_MASK		0x18
+
+/*
+ * Scans the devicetree to find the parent PMC node
+ * vt8500 clocks are contained within the PMC controller - rather
+ * than assume the clocks are direct-descendants of the PMC, check
+ * up the tree until we find a node with a mapable reg property.
+ */
+static int vt8500_find_and_map_base(struct device_node *node)
+{
+	struct device_node *parent = of_get_parent(node);
+
+	while (parent) {
+		pmc_base = of_iomap(parent, 0);
+		if (pmc_base)
+			return 0;
+
+		parent = of_get_parent(parent);
+	}
+
+	pr_err("Unable to map clock registers\n");
+	return -EINVAL;
+}
 
 static void vt8500_pmc_wait_busy(void)
 {
@@ -220,6 +243,10 @@ static __init void vtwm_device_clk_init(struct device_node *node)
 	struct clk_init_data init;
 	int rc;
 	int clk_init_flags = 0;
+
+	if (!pmc_base)
+		if (vt8500_find_and_map_base(node))
+			return;
 
 	dev_clk = kzalloc(sizeof(*dev_clk), GFP_KERNEL);
 	if (WARN_ON(!dev_clk))
@@ -635,6 +662,10 @@ static __init void vtwm_pll_clk_init(struct device_node *node, int pll_type)
 	struct clk_init_data init;
 	int rc;
 
+	if (!pmc_base)
+		if (vt8500_find_and_map_base(node))
+			return;
+
 	rc = of_property_read_u32(node, "reg", &reg);
 	if (WARN_ON(rc))
 		return;
@@ -693,13 +724,3 @@ static void __init wm8850_pll_init(struct device_node *node)
 	vtwm_pll_clk_init(node, PLL_TYPE_WM8850);
 }
 CLK_OF_DECLARE(wm8850_pll, "wm,wm8850-pll-clock", wm8850_pll_init);
-
-void __init vtwm_clk_init(void __iomem *base)
-{
-	if (!base)
-		return;
-
-	pmc_base = base;
-
-	of_clk_init(NULL);
-}
