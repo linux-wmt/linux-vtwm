@@ -43,6 +43,57 @@
 	};
 };
 
+&nand {
+	nand-ecc-mode = "hw";
+	nand-bus-width = <8>;
+	nand-on-flash-bbt;
+
+	partition@0 {
+		label = "w-load";
+		reg = <0x00000000 0x100000>;
+	};
+	partition@100000 {
+		label = "u-boot env cfg";
+		reg = <0x00100000 0x900000>;
+	};
+	partition@A00000 {
+		label = "u-boot";
+		reg = <0x00A00000 0x900000>;
+	};
+	partition@1300000 {
+		label = "kernel";
+		reg = <0x01300000 0x800000>;
+	};
+	partition@1B00000 {
+		label = "initrd";
+		reg = <0x01B00000 0x600000>;
+	};
+	partition@2100000 {
+		label = "filesystem";
+		reg = <0x02100000 0x10000000>;
+	};
+	partition@12100000 {
+		label = "u-boot-logo";
+		reg = <0x12100000 0x200000>;
+	};
+	partition@12300000 {
+		label = "kernel-logo";
+		reg = <0x12300000 0x400000>;
+	};
+	partition@16300000 {
+		label = "android-data";
+		reg = <0x16300000 0x40000000>;
+	};
+	partition@56300000 {
+		label = "android-cache";
+		reg = <0x56300000 0x8000000>;
+	};
+	partition@5E300000 {
+		label = "LocalDisk";
+		reg = <0x5E300000 0x21D00000>;
+	};
+};
+
 &pinctrl {
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c &vga>;

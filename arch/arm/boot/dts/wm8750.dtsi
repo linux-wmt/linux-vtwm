@@ -225,6 +225,15 @@
 					enable-bit = <23>;
 				};
 
+				clknand: nand {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&pllb>;
+					divisor-reg = <0x318>;
+					enable-reg = <0x254>;
+					enable-bit = <16>;
+				};
+
 				clki2c0: i2c0clk {
 					#clock-cells = <0>;
 					compatible = "via,vt8500-device-clock";
@@ -243,6 +252,15 @@
 					enable-bit = <9>;
 				};
 			};
+		};
+
+		nand: nand@d8002000 {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			compatible = "wm,wm8750-nand";
+			reg = <0xd8009000 0x400>;
+			clocks = <&clknand>;
+			interrupts = <28 29>;
 		};
 
 		sf@d8002000 {
