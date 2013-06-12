@@ -63,7 +63,7 @@
 #define REG_CHIP_ENABLE_CTRL		0x44
 #define REG_NAND_TYPE_SEL		0x48
 #define REG_REDUNT_ECC_STAT_MASK	0x4C
-#define REG_READ_CYCLE_PULE_CTRL	0x50
+#define REG_READ_CYCLE_PULSE_CTRL	0x50
 #define REG_MISC_CTRL			0x54
 #define REG_DUMMY_CTRL			0x58
 #define REG_PAGESIZE_DIVIDER_SEL	0x5C
@@ -82,14 +82,21 @@
 #define REG_ECC_BCH_INT_MASK		0x90
 #define REG_ECC_BCH_INT_STAT1		0x94
 #define REG_ECC_BCH_INT_STAT2		0x98
-#define REG_ECC_BCH_ERR_POS1		0x9C
-#define REG_ECC_BCH_ERR_POS2		0xA0
-#define REG_ECC_BCH_ERR_POS3		0xA4
-#define REG_ECC_BCH_ERR_POS4		0xA8
-#define REG_ECC_BCH_ERR_POS5		0xAC
-#define REG_ECC_BCH_ERR_POS6		0xB0
-#define REG_ECC_BCH_ERR_POS7		0xB4
-#define REG_ECC_BCH_ERR_POS8		0xB8
+/*
+ * VT8500 supports MAX_ERR_MASK=3  (POS1..POS2)
+ * WM8505 supports MAX_ERR_MASK=15 (POS1..POS8)
+ * WM8650, WM8750 supports MAX_ERR_MASK=31 (POS1..POS16)
+ * WM8850, WM8950 supports MAX_ERR_MASK=63 (POS1..POS32) but this would overlap
+ *  the DMA registers?!?
+ */
+#define REG_ECC_BCH_ERR_POS1		0x9C /* 0, 1 */
+#define REG_ECC_BCH_ERR_POS2		0xA0 /* 2, 3 */
+#define REG_ECC_BCH_ERR_POS3		0xA4 /* 4, 5 */
+#define REG_ECC_BCH_ERR_POS4		0xA8 /* 6, 7 */
+#define REG_ECC_BCH_ERR_POS5		0xAC /* 8, 9 */
+#define REG_ECC_BCH_ERR_POS6		0xB0 /* 10, 11 */
+#define REG_ECC_BCH_ERR_POS7		0xB4 /* 12, 13 */
+#define REG_ECC_BCH_ERR_POS8		0xB8 /* 14, 15 */
 
 #define REG_NFC_DMA_GCR			0x100
 #define REG_NFC_DMA_IER			0x104
@@ -118,7 +125,7 @@
 #define REG_ECC_FIFO_E			0x1F8
 #define REG_ECC_FIFO_F			0x1FC
 
-/* 0x04 */
+/* 0x04 REG_COMCTRL */
 #define COMCTRL_TRIGGER_CMD		BIT(0)
 #define COMCTRL_MULT_COMMANDS		BIT(4)
 #define COMCTRL_CYCLES_DMA		0
@@ -130,15 +137,15 @@
 #define COMCTRL_NO_DATA			BIT(7)
 #define COMCTRL_OLD_CMD			BIT(10)
 
-/* 0x28 */
+/* 0x28 REG_MISC_STAT_PORT */
 #define MSP_READY			BIT(0)
 #define MSP_TRANSFER_ACTIVE		BIT(1)
 #define MSP_CMD_READY			BIT(2)
 
-/* 0x2C */
+/* 0x2C REG_HOST_STAT_CHANGE */
 #define HSC_B2R				BIT(3)
 
-/* 0x48 */
+/* 0x48 REG_NAND_TYPE_SEL */
 #define TYPESEL_PAGE_512		0
 #define TYPESEL_PAGE_2K			1
 #define TYPESEL_PAGE_4K			2
@@ -149,8 +156,9 @@
 #define TYPESEL_WP_DIS			BIT(4)
 #define TYPESEL_DIRECT_MAP		BIT(5)
 #define TYPESEL_CHECK_ALLFF		BIT(6)
+#define TYPESEL_PAGE_16K		BIT(8)	/* WM8850+ */
 
-/* 0x4C */
+/* 0x4C REG_REDUNT_ECC_STAT_MASK */
 #define RESM_MASKABLE_INT_DIS		BIT(6)
 #define RESM_B2R_DIS			BIT(3)
 #define RESM_UNCORRECTABLE_ERR_INT_DIS	BIT(2)
@@ -161,17 +169,24 @@
 					RESM_UNCORRECTABLE_ERR_INT_DIS | \
 					RESM_REDUNTANT_ERR_INT_DIS)
 
-/* 0x50 */
-#define PULE_DIVISOR_MASK		0xffff0000;
+/* 0x50 REG_READ_CYCLE_PULSE_CTRL */
+#define PULSE_DIVISOR_MASK		0xffff0000;
+#define PULSE_tRP(x)			(((x) & 0xF) << 12)
+#define PULSE_tRC(x)			(((x) & 0xF) << 8)
+#define PULSE_tWP(x)			(((x) & 0xF) << 4)
+#define PULSE_tWC(x)			((x) & 0xF)
 
-/* 0x54 */
+/* 0x54 REG_MISC_CTRL */
 #define MISCCTRL_SOFTWARE_ECC		BIT(2)
 
-/* 0x5C */
+/* 0x5C REG_PAGESIZE_DIVIDER_SEL */
 #define PAGE_BLOCK_DIVISOR_MASK		0xE0
 #define PAGE_BLOCK_DIVISOR(x)		((x) << 5)
 
-/* 0x8C */
+/* 0x74 REG_IDLE_STAT */
+#define ISTAT_NAND_IDLE			BIT(0)
+
+/* 0x8C REG_ECC_BCH_CTRL */
 #define EBC_ECC_TYPE_MASK		0xFFFFFFF0
 #define EBC_ECC_1BIT			0
 #define EBC_ECC_4BIT			1
@@ -184,24 +199,24 @@
 #define EBC_ECC_44BIT			8
 #define EBC_READ_RESUME			BIT(8)
 
-/* 0x90 */
+/* 0x90 REG_ECC_BCH_INT_MASK */
 #define EBIM_INT_EN			(BIT(8) | BIT(0))
 
-/* 0x94 */
+/* 0x94 REG_ECC_BCH_INT_STAT1 */
 #define EBIS1_ERROR			BIT(0)
 #define EBIS1_CORRECTION_DONE		BIT(8)
 
-/* 0x98 */
+/* 0x98 REG_ECC_BCH_INT_STAT2 */
 #define EBIS2_ERROR_OOB			BIT(11)
 
-/* 0x100 */
+/* 0x100 REG_NFC_DMA_GCR */
 #define DMA_GCR_DMA_EN			BIT(0)
 #define DMA_GCR_SOFTRESET		BIT(8)
 
-/* 0x108 */
+/* 0x108 REG_NFC_DMA_ISR */
 #define DMA_IER_INT_STS			BIT(0)
 
-/* 0x120 */
+/* 0x120 REG_NFC_DMA_CCR */
 #define DMA_CCR_EVTCODE			0x0f
 #define DMA_CCR_EVT_NO_STATUS		0x00
 #define DMA_CCR_EVT_FF_UNDERRUN		0x01
@@ -210,58 +225,73 @@
 #define DMA_CCR_EVT_DATA_RW		0x04
 #define DMA_CCR_EVT_EARLY_END		0x05
 #define DMA_CCR_EVT_SUCCESS		0x0f
-
 #define DMA_CCR_RUN			BIT(7)
 #define DMA_CCR_IF_TO_PERIPHERAL	0
 #define DMA_CCR_PERIPHERAL_TO_IF	BIT(22)
 
-static struct nand_ecclayout vt8500_oobinfo = {
+static struct nand_ecclayout wmt_oobinfo_512 = {
+	.eccbytes = 8,
+	.eccpos = { 4, 5, 6, 8, 9, 10, 12, 13},
+	.oobfree = {{0, 4}, {7, 1}, {11,1}, {14,2}}
+};
+
+static struct nand_ecclayout wmt_oobinfo_2K_4K = {
 	.eccbytes = 7,
-	.eccpos = {24, 25, 26, 27, 28, 29, 30},
+	.eccpos = { 24, 25, 26, 27, 28, 29, 30},
 	.oobavail = 24,
-	.oobfree = { {0, 24} }
+	.oobfree = {{0, 24}}
 };
 
-struct nand_dma_desc {
-	u32 req_count:16;
-	u32 i:1;
-	u32 r1:13;
-	u32 format:1;
-	u32 end:1;
-	u32 addr:32;
-	u32 branch_addr:32;
-	u32 r2:32;
+static struct nand_ecclayout wmt_oobinfo_8K = {
+	.eccbytes = 42,
+	.eccpos = { 24, 25, 26, 27, 28, 29, 30,
+		    31, 32, 33, 34, 35, 36, 37,
+		    38, 39, 40, 41, 42, 43, 44,
+		    45, 46, 47, 48, 49, 50, 51,
+		    52, 53, 54, 55, 56, 57, 58,
+		    59, 60, 61, 62, 63, 64, 65},
+	.oobavail = 24,
+	.oobfree = {{0, 24}}
 };
 
-struct nand_priv {
-	struct mtd_info mtd;
-	struct nand_chip nand;
-
-	struct device *dev;
-	void __iomem *reg_base;
-	struct clk *clk;
-
-	dma_addr_t dmaaddr;
-	unsigned char *dmabuf;
-
-	dma_addr_t dma_d_addr;
-	struct nand_dma_desc *dma_desc;
-
-	int dataptr;
-
-	int page;
-
-	int nand_irq;
-	int dma_irq;
-
-	unsigned long dma_status;
-
-	struct completion nand_complete;
-	struct completion dma_complete;
+static struct nand_ecclayout wmt_oobinfo_16K = {
+	.eccbytes = 70,
+	.eccpos = { 24, 25, 26, 27, 28, 29, 30,
+		    31, 32, 33, 34, 35, 36, 37,
+		    38, 39, 40, 41, 42, 43, 44,
+		    45, 46, 47, 48, 49, 50, 51,
+		    52, 53, 54, 55, 56, 57, 58,
+		    59, 60, 61, 62, 63, 64, 65,
+		    66, 67, 68, 69, 70, 71, 72,
+		    73, 74, 75, 76, 77, 78, 79,
+		    80, 81, 82, 83, 84, 85, 86,
+		    87, 88, 89, 90, 91, 92, 93},
+	.oobavail = 24,
+	.oobfree = {{0, 24}}
 };
 
 static uint8_t nand_bbt_pattern[] = { 'B', 'b', 't', '0' };
 static uint8_t nand_mirror_pattern[] = { '1', 't', 'b', 'B' };
+
+static struct nand_bbt_descr nand_bbt_main_descr_512 = {
+	.options = NAND_BBT_LASTBLOCK | NAND_BBT_CREATE | NAND_BBT_WRITE
+		| NAND_BBT_2BIT | NAND_BBT_VERSION | NAND_BBT_PERCHIP,
+	.offs =	4,
+	.len = 4,
+	.veroffs = 14,
+	.maxblocks = 4,
+	.pattern = nand_bbt_pattern,
+};
+
+static struct nand_bbt_descr nand_bbt_mirror_descr_512 = {
+	.options = NAND_BBT_LASTBLOCK | NAND_BBT_CREATE | NAND_BBT_WRITE
+		| NAND_BBT_2BIT | NAND_BBT_VERSION | NAND_BBT_PERCHIP,
+	.offs =	4,
+	.len = 4,
+	.veroffs = 14,
+	.maxblocks = 4,
+	.pattern = nand_mirror_pattern,
+};
 
 static struct nand_bbt_descr nand_bbt_main_descr_2048 = {
 	.options = NAND_BBT_LASTBLOCK | NAND_BBT_CREATE | NAND_BBT_WRITE
@@ -283,96 +313,135 @@ static struct nand_bbt_descr nand_bbt_mirror_descr_2048 = {
 	.pattern = nand_mirror_pattern,
 };
 
-struct nand_priv *wmt_mtd_to_priv(struct mtd_info *mtd)
+struct nand_dma_desc {
+	u32 req_count:16;
+	u32 i:1;
+	u32 r1:13;
+	u32 format:1;
+	u32 end:1;
+	u32 addr:32;
+	u32 branch_addr:32;
+	u32 r2:32;
+};
+
+struct nand_priv {
+	struct mtd_info mtd;
+	struct nand_chip nand;
+
+	struct device *dev;
+	void __iomem *reg_base;
+	struct clk *clk;
+	u32 clk_rate;
+
+	dma_addr_t dma_addr;
+	unsigned char *dmabuf;
+
+	dma_addr_t dma_d_addr;
+	struct nand_dma_desc *dma_desc;
+
+	int dataptr;
+
+	int page;
+
+	int nand_irq;
+	int dma_irq;
+
+	unsigned long dma_status;
+
+	struct completion nand_complete;
+	struct completion dma_complete;
+};
+
+static int reg_get_bit(struct nand_priv *priv, u32 addr, u32 val)
 {
-	return container_of(mtd, struct nand_priv, mtd);
+	return readl(priv->nand.IO_ADDR_R + addr) & val;
 }
 
-int wmt_nand_get_bit(struct nand_priv *priv, int address, unsigned bit)
+static void reg_set_bit(struct nand_priv *priv, u32 addr, u32 val)
 {
-	return readl(priv->nand.IO_ADDR_R + address) & bit;
+	u32 tmp;
+
+	tmp = readl(priv->nand.IO_ADDR_R + addr);
+	tmp |= val;
+	writel(tmp, priv->nand.IO_ADDR_R + addr);
 }
 
-void wmt_nand_set_bit(struct nand_priv *priv, int address, unsigned val)
+static void reg_clear_bit(struct nand_priv *priv, u32 addr, u32 val)
 {
-	unsigned long t = readl(priv->nand.IO_ADDR_R + address);
-	t |= val;
-	writel(t, priv->nand.IO_ADDR_R + address);
+	u32 tmp;
+
+	tmp = readl(priv->nand.IO_ADDR_R + addr);
+	tmp &= ~val;
+	writel(tmp, priv->nand.IO_ADDR_R + addr);
 }
 
-void wmt_nand_clear_bit(struct nand_priv *priv, int address, unsigned bit)
-{
-	unsigned long t = readl(priv->nand.IO_ADDR_R + address);
-	t &= ~bit;
-	writel(t, priv->nand.IO_ADDR_R + address);
-}
+#define to_nand_priv(mtd)	container_of(mtd, struct nand_priv, mtd)
+#define wmt_clear_b2r(priv)	reg_set_bit(priv, REG_HOST_STAT_CHANGE, HSC_B2R)
+#define wmt_get_b2r(priv)	reg_get_bit(priv, REG_HOST_STAT_CHANGE, HSC_B2R)
 
-#define NAND_MAX_CLOCK_SPEED	50000000
 static int wmt_nand_set_clock(struct nand_priv *priv)
 {
-	unsigned long ptRP = 12000;
-	unsigned long ptRC = 25000;
-	unsigned long ptWP = 12000;
-	unsigned long ptWC = 25000;
 	unsigned long reg;
-	unsigned long pule_reg;
-	unsigned long min_val;
+	unsigned long pulse_reg;
 
-	min_val = min(min(ptRP, ptRC), min(ptWP, ptWC));
+	pulse_reg = readl(priv->nand.IO_ADDR_R + REG_READ_CYCLE_PULSE_CTRL);
+	pulse_reg &= PULSE_DIVISOR_MASK;
 
-	pule_reg = readl(priv->nand.IO_ADDR_R + REG_READ_CYCLE_PULE_CTRL);
-	pule_reg &= PULE_DIVISOR_MASK;
+	/*
+	 * According to vendor source, write-timing has a bug in 1T2T 
+	 * since at least WM8650, so we set 2T4T as a default to be safe.
+	 * Read-timing is also hard-coded to 2T4T in vendor source.
+	 */
+/*	reg = PULSE_tRP(2);
+	reg |= PULSE_tRC(4);
+	reg |= PULSE_tWP(2);
+	reg |= PULSE_tWC(4);*/
 
-	reg = ptRP / min_val;
-	reg <<= 4;
+	reg = PULSE_tRP(3);
+	reg |= PULSE_tRC(6);
+	reg |= PULSE_tWP(3);
+	reg |= PULSE_tWC(6);
+	pulse_reg |= reg;
+	writel(pulse_reg, priv->nand.IO_ADDR_R + REG_READ_CYCLE_PULSE_CTRL);
 
-	reg |= ptRC / min_val;
-	reg <<= 4;
-
-	reg |= ptWP / min_val;
-	reg <<= 4;
-
-	reg |= ptWC / min_val;
-
-	clk_set_rate(priv->clk, NAND_MAX_CLOCK_SPEED);
-
-	writel(pule_reg | reg, priv->nand.IO_ADDR_R + REG_READ_CYCLE_PULE_CTRL);
+	clk_set_rate(priv->clk, priv->clk_rate);
 
 	return 0;
 }
 
-void __iomem *wmt_nand_addr_cycle_to_reg(struct nand_priv *priv, int cycle)
+static void __iomem *addr_cycle_to_reg(struct nand_priv *priv, u32 cycle)
 {
 	u8 *addr_reg = priv->nand.IO_ADDR_R + REG_COMPORT1_2;
 	return addr_reg + 4 * (cycle / 2) + cycle % 2;
 }
 
-static int wmt_nand_set_addr(struct nand_priv *priv, int column, int page_addr)
+static u32 wmt_nand_set_addr(struct nand_priv *priv, int column,
+			     int page_addr)
 {
 	struct nand_chip *chip = &priv->nand;
-	int addr_cycle = 0;
+	u32 addr_cycle = 0;
 	u8 *addr_reg;
 
 	if (column != -1) {
-		addr_reg = wmt_nand_addr_cycle_to_reg(priv, addr_cycle++);
+		addr_reg = addr_cycle_to_reg(priv, addr_cycle++);
 		writeb(column, addr_reg);
 		column >>= 8;
 
-		addr_reg = wmt_nand_addr_cycle_to_reg(priv, addr_cycle++);
+		addr_reg = addr_cycle_to_reg(priv, addr_cycle++);
 		writeb(column, addr_reg);
 	}
 
 	if (page_addr != -1) {
-		addr_reg = wmt_nand_addr_cycle_to_reg(priv, addr_cycle++);
+		addr_reg = addr_cycle_to_reg(priv, addr_cycle++);
 		writeb(page_addr, addr_reg);
 		page_addr >>= 8;
 
-		addr_reg = wmt_nand_addr_cycle_to_reg(priv, addr_cycle++);
+		addr_reg = addr_cycle_to_reg(priv, addr_cycle++);
 		writeb(page_addr, addr_reg);
 
 		if (chip->chip_shift - chip->page_shift > 16) {
 			page_addr >>= 8;
-			addr_reg = wmt_nand_addr_cycle_to_reg(priv, addr_cycle++);
+			addr_reg = addr_cycle_to_reg(priv, addr_cycle++);
 			writeb(page_addr, addr_reg);
 		}
 	}
@@ -380,24 +449,30 @@ static int wmt_nand_set_addr(struct nand_priv *priv, int column, int page_addr)
 	return addr_cycle;
 }
 
-static void wmt_nand_clear_busy2ready(struct nand_priv *priv)
+static int wmt_wait_nand_idle(struct nand_priv *priv)
 {
-	wmt_nand_set_bit(priv, REG_HOST_STAT_CHANGE, HSC_B2R);
-}
+	int loop_guard = (1 << 20);
 
-static int wmt_nand_get_busy2ready(struct nand_priv *priv)
-{
-	return wmt_nand_get_bit(priv, REG_HOST_STAT_CHANGE, HSC_B2R);
+	while (--loop_guard &&
+		!(reg_get_bit(priv, REG_IDLE_STAT, ISTAT_NAND_IDLE)))
+		cpu_relax();
+
+	if (!loop_guard)
+		dev_err(priv->dev, "wait_nand_idle() timed out\n");
+
+	return 0;
 }
 
 static int wmt_nand_wait_cmd_ready(struct nand_priv *priv)
 {
 	int loop_guard = (1 << 20);
 
-	while (--loop_guard && wmt_nand_get_bit(priv, REG_MISC_STAT_PORT, MSP_CMD_READY))
+	while (--loop_guard &&
+		reg_get_bit(priv, REG_MISC_STAT_PORT, MSP_CMD_READY))
 		cpu_relax();
 
-	BUG_ON(!loop_guard);
+	if (!loop_guard)
+		dev_err(priv->dev, "wait_cmd_ready() timed out\n");
 
 	return 0;
 }
@@ -407,24 +482,26 @@ static int wmt_nand_wait_transfer_ready(struct nand_priv *priv)
 	int loop_guard = (1 << 28);
 
 	while (--loop_guard &&
-		wmt_nand_get_bit(priv, REG_MISC_STAT_PORT, MSP_TRANSFER_ACTIVE))
+		reg_get_bit(priv, REG_MISC_STAT_PORT, MSP_TRANSFER_ACTIVE))
 		cpu_relax();
 
-	BUG_ON(!loop_guard);
+	if (!loop_guard)
+		dev_err(priv->dev, "wait_transfer_ready() timed out\n");
 
 	return 0;
 }
 
 static int wmt_nand_device_ready(struct mtd_info *mtd)
 {
-	struct nand_priv *priv = wmt_mtd_to_priv(mtd);
-	return wmt_nand_get_bit(priv, REG_MISC_STAT_PORT, MSP_READY);
+	struct nand_priv *priv = to_nand_priv(mtd);
+
+	return reg_get_bit(priv, REG_MISC_STAT_PORT, MSP_READY);
 }
 
 static int wmt_nand_read_page(struct mtd_info *mtd, struct nand_chip *chip,
 			       uint8_t *buf, int oob_required, int page)
 {
-	struct nand_priv *priv = wmt_mtd_to_priv(mtd);
+	struct nand_priv *priv = to_nand_priv(mtd);
 
 	chip->read_buf(mtd, buf, mtd->writesize);
 	memcpy_fromio(chip->oob_poi, priv->nand.IO_ADDR_R + REG_ECC_FIFO_0,
@@ -461,18 +538,15 @@ static void wmt_nand_setup_dma_transfer(struct nand_priv *priv, int direction)
 
 	writel(DMA_GCR_SOFTRESET, priv->nand.IO_ADDR_R + REG_NFC_DMA_GCR);
 	writel(DMA_GCR_DMA_EN, priv->nand.IO_ADDR_R + REG_NFC_DMA_GCR);
-	/* check if we really succeeded */
-	BUG_ON((readl(priv->nand.IO_ADDR_R + REG_NFC_DMA_GCR) & DMA_GCR_DMA_EN)
-	       == 0);
 
 	memset(priv->dma_desc, 0, sizeof(*priv->dma_desc));
 	priv->dma_desc->req_count = priv->mtd.writesize;
 	priv->dma_desc->format = 1;
 	priv->dma_desc->i = 1;
-	priv->dma_desc->addr = (u32) priv->dmaaddr;
+	priv->dma_desc->addr = (u32) priv->dma_addr;
 	priv->dma_desc->end = 1;
 
-	writel((u32) priv->dma_d_addr, priv->nand.IO_ADDR_R + REG_NFC_DMA_DESPR);
+	writel((u32)priv->dma_d_addr, priv->nand.IO_ADDR_R + REG_NFC_DMA_DESPR);
 
 	/* set direction */
 	tmp = readl(priv->nand.IO_ADDR_R + REG_NFC_DMA_CCR);
@@ -501,16 +575,18 @@ static void wmt_nand_setup_command(struct nand_priv *priv, int flag,
 static void wmt_nand_trigger_command(struct nand_priv *priv, int flag,
 				   int command_bytes)
 {
+	wmt_clear_b2r(priv);
+
 	flag |= COMCTRL_TRIGGER_CMD;
 	wmt_nand_setup_command(priv, flag, command_bytes);
 }
 
 static int wmt_nand_wait_dma(struct nand_priv *priv)
 {
-	if (!wait_for_completion_interruptible_timeout
-	    (&priv->dma_complete, msecs_to_jiffies(1000))) {
+	if (!wait_for_completion_timeout(&priv->dma_complete,
+					 msecs_to_jiffies(1000))) {
 		dev_err(priv->dev, "Waiting for dma interrupt failed!\n");
-		return -1;
+		return -ETIMEDOUT;
 	}
 
 	if (priv->dma_status == DMA_CCR_EVT_FF_UNDERRUN)
@@ -537,7 +613,7 @@ static int wmt_nand_write_oob(struct mtd_info *mtd, struct nand_chip *chip,
 {
 	int addr_cycle;
 	int status;
-	struct nand_priv *priv = wmt_mtd_to_priv(mtd);
+	struct nand_priv *priv = to_nand_priv(mtd);
 
 	chip->cmdfunc(mtd, NAND_CMD_READ0, 0, page);
 	priv->dataptr = 0;
@@ -568,7 +644,7 @@ static int wmt_nand_write_page(struct mtd_info *mtd, struct nand_chip *chip,
 				const uint8_t *buf, int oob_required)
 {
 	int addr_cycle;
-	struct nand_priv *priv = wmt_mtd_to_priv(mtd);
+	struct nand_priv *priv = to_nand_priv(mtd);
 
 	memset_io(priv->nand.IO_ADDR_R + REG_ECC_FIFO_0, 0xff, 64);
 	memcpy_toio(priv->nand.IO_ADDR_R + REG_ECC_FIFO_0, chip->oob_poi,
@@ -595,7 +671,7 @@ static int wmt_nand_write_page(struct mtd_info *mtd, struct nand_chip *chip,
 static int wmt_nand_read_page_raw(struct mtd_info *mtd, struct nand_chip *chip,
 				   uint8_t *buf, int oob_required, int page)
 {
-	struct nand_priv *priv = wmt_mtd_to_priv(mtd);
+	struct nand_priv *priv = to_nand_priv(mtd);
 
 	chip->read_buf(mtd, buf, mtd->writesize);
 	memcpy_fromio(chip->oob_poi, priv->nand.IO_ADDR_R + REG_ECC_FIFO_0,
@@ -607,7 +683,7 @@ static int wmt_nand_read_page_raw(struct mtd_info *mtd, struct nand_chip *chip,
 static void wmt_nand_select_chip(struct mtd_info *mtd, int chipnr)
 {
 
-	struct nand_priv *priv = wmt_mtd_to_priv(mtd);
+	struct nand_priv *priv = to_nand_priv(mtd);
 
 	dev_dbg(priv->dev, "Selecting chip nr %d", chipnr);
 
@@ -627,7 +703,7 @@ static void wmt_nand_select_chip(struct mtd_info *mtd, int chipnr)
 
 static void wmt_nand_read_resume(struct nand_priv *priv)
 {
-	wmt_nand_set_bit(priv, REG_ECC_BCH_CTRL, EBC_READ_RESUME);
+	reg_set_bit(priv, REG_ECC_BCH_CTRL, EBC_READ_RESUME);
 }
 
 static u8 wmt_nand_bit_correct(u8 val, int bit)
@@ -640,14 +716,14 @@ static void wmt_nand_correct_error(struct nand_priv *priv)
 	int i, err_count, err_byte, err_bit, err_reg, oob, bank, err_idx;
 	u8 v;
 
-	err_count = readl(priv->nand.IO_ADDR_R + REG_ECC_BCH_INT_STAT2) & 0xf;
-	oob = wmt_nand_get_bit(priv, REG_ECC_BCH_INT_STAT2, EBIS2_ERROR_OOB);
+	err_count = readl(priv->nand.IO_ADDR_R + REG_ECC_BCH_INT_STAT2) & 0x1f;
+	oob = reg_get_bit(priv, REG_ECC_BCH_INT_STAT2, EBIS2_ERROR_OOB);
 
 	if (!oob)
 		bank = (readl(priv->nand.IO_ADDR_R + REG_ECC_BCH_INT_STAT2) >> 8) & 0x3;
 
-	if (err_count > 4) {
-		dev_info(priv->dev, "Too many errors(%d), cannot correct.\n", err_count);
+	if (err_count == 0x1f) {
+		dev_info(priv->dev, "Too many errors, cannot correct\n");
 		priv->mtd.ecc_stats.failed++;
 		wmt_nand_read_resume(priv);
 		return;
@@ -680,10 +756,10 @@ static void wmt_nand_correct_error(struct nand_priv *priv)
 
 static int wmt_nand_wait_completion(struct nand_priv *priv)
 {
-	if (!wait_for_completion_interruptible_timeout
-	    (&priv->nand_complete, msecs_to_jiffies(1000))) {
+	if (!wait_for_completion_timeout(&priv->nand_complete,
+					 msecs_to_jiffies(1000))) {
 		dev_err(priv->dev, "Waiting for nand interrupt failed!\n");
-		return -1;
+		return -ETIMEDOUT;
 	}
 
 	return 0;
@@ -692,13 +768,16 @@ static int wmt_nand_wait_completion(struct nand_priv *priv)
 static void wmt_nand_read_command(struct nand_priv *priv, int page_addr,
 				int column, int command)
 {
-	int addr_cycle;
+	int addr_cycle = 0;
 	unsigned short tmp;
 
-	if (command == NAND_CMD_READOOB && column != -1)
+	init_completion(&priv->nand_complete);
+
+	if (command == NAND_CMD_READOOB && column != -1) {
 		column +=
 		    (priv->nand.ecc.size +
 		     priv->nand.ecc.bytes) * priv->nand.ecc.steps;
+	}
 
 	addr_cycle = wmt_nand_set_addr(priv, column, page_addr);
 
@@ -712,8 +791,8 @@ static void wmt_nand_read_command(struct nand_priv *priv, int page_addr,
 	priv->dataptr = 0;
 
 	writeb(NAND_CMD_READ0, priv->nand.IO_ADDR_W);
-	writeb(NAND_CMD_READSTART,
-	       wmt_nand_addr_cycle_to_reg(priv, addr_cycle));
+	writeb(NAND_CMD_READSTART, addr_cycle_to_reg(priv, addr_cycle));
+
 	wmt_nand_trigger_command(priv, COMCTRL_NAND_2_NFC |
 				 COMCTRL_MULT_COMMANDS, addr_cycle + 2);
 
@@ -728,38 +807,69 @@ static void wmt_nand_readid(struct nand_priv *priv, int column)
 	int addr_cycle = 0;
 	int i;
 
-	addr_cycle = wmt_nand_set_addr(priv, 0, -1);
+	addr_cycle = wmt_nand_set_addr(priv, column, -1);
 	writeb(NAND_CMD_READID, priv->nand.IO_ADDR_W);
 
 	wmt_nand_trigger_command(priv, COMCTRL_NO_DATA | COMCTRL_NFC_2_NAND |
-				 COMCTRL_CYCLES_NONE, addr_cycle + 1);
-	wmt_nand_wait_cmd_ready(priv);
+					COMCTRL_CYCLES_NONE, addr_cycle + 1);
+	wmt_nand_wait_transfer_ready(priv);
 
-	for (i=0; i < column + 8; i++) {
+	priv->dataptr = 0;
+	for (i=0; i < 5; i++) {
 		wmt_nand_trigger_command(priv, COMCTRL_HAS_DATA |
-					 COMCTRL_NAND_2_NFC |
-					 COMCTRL_CYCLES_SINGLE, 0);
-
-		if (wmt_nand_wait_cmd_ready(priv))
-			dev_warn(priv->dev, "Timed out waiting for command completion before reading byte\n");
-
+						COMCTRL_NAND_2_NFC |
+						COMCTRL_CYCLES_SINGLE, 0);
 		wmt_nand_wait_transfer_ready(priv);
+		wmt_wait_nand_idle(priv);
 
 		priv->dmabuf[i] = readb(priv->nand.IO_ADDR_R);
 	}
-
-	priv->dataptr = column;
 }
+
+static void wmt_nand_param(struct nand_priv *priv, int column)
+{
+	int addr_cycle = 0;
+	int i;
+
+	addr_cycle = wmt_nand_set_addr(priv, column, -1);
+	writeb(NAND_CMD_PARAM, priv->nand.IO_ADDR_W);
+
+	wmt_nand_trigger_command(priv, COMCTRL_NO_DATA | COMCTRL_NFC_2_NAND |
+					COMCTRL_CYCLES_NONE, addr_cycle + 1);
+	wmt_nand_wait_transfer_ready(priv);
+
+	/*
+	 * On my WM8850 with Micron NAND, first byte is always 0 and corrupts
+	 * the param table, so skip byte 0 in the buffer. Possibly a NAND
+	 * controller bug as the vendor doesn't use ONFI at all.
+	 */
+	priv->dataptr = 1;
+
+	for (i=0; i <= 768; i++) {
+		wmt_nand_trigger_command(priv, COMCTRL_HAS_DATA |
+						COMCTRL_NAND_2_NFC |
+						COMCTRL_CYCLES_SINGLE, 0);
+		wmt_nand_wait_transfer_ready(priv);
+		wmt_wait_nand_idle(priv);
+
+		udelay(100);
+
+		priv->dmabuf[i] = readb(priv->nand.IO_ADDR_R);
+	}
+}
+
 
 static void wmt_nand_cmdfunc(struct mtd_info *mtd, unsigned command,
 				int column, int page_addr)
 {
 
-	struct nand_priv *priv = wmt_mtd_to_priv(mtd);
+	struct nand_priv *priv = to_nand_priv(mtd);
 	int addr_cycle = 0;
 
-	dev_dbg(priv->dev, "Command: %u, column: %x, page_addr: %x\n",
+	dev_info(priv->dev, "Command: %u, column: %x, page_addr: %x\n",
 		command, column, page_addr);
+
+	init_completion(&priv->nand_complete);
 
 	switch (command) {
 	case NAND_CMD_SEQIN:
@@ -767,6 +877,9 @@ static void wmt_nand_cmdfunc(struct mtd_info *mtd, unsigned command,
 		return;
 	case NAND_CMD_READID:
 		wmt_nand_readid(priv, column);
+		return;
+	case NAND_CMD_PARAM:
+		wmt_nand_param(priv, column);
 		return;
 	case NAND_CMD_ERASE1:
 		addr_cycle = wmt_nand_set_addr(priv, column, page_addr);
@@ -779,12 +892,10 @@ static void wmt_nand_cmdfunc(struct mtd_info *mtd, unsigned command,
 		wmt_nand_trigger_command(priv, COMCTRL_NO_DATA |
 					 COMCTRL_NFC_2_NAND |
 					 COMCTRL_CYCLES_NONE, addr_cycle + 1);
-		if (command == NAND_CMD_ERASE1 || command == NAND_CMD_STATUS
-					       || command == NAND_CMD_READID)
+		if (command == NAND_CMD_ERASE1 || command == NAND_CMD_STATUS)
 			wmt_nand_wait_cmd_ready(priv);
 		else
 			wmt_nand_wait_completion(priv);
-
 		break;
 	case NAND_CMD_READOOB:
 	case NAND_CMD_READ0:
@@ -802,42 +913,82 @@ static int wmt_nand_read_oob(struct mtd_info *mtd, struct nand_chip *chip,
 			      int page)
 {
 
-	struct nand_priv *priv = wmt_mtd_to_priv(mtd);
+	struct nand_priv *priv = to_nand_priv(mtd);
 	uint8_t *buf = chip->oob_poi;
+	int i;
 
-	wmt_nand_set_bit(priv, REG_SMC_ENABLE, 0x02);
+	reg_set_bit(priv, REG_SMC_ENABLE, 0x02);
 
 	chip->cmdfunc(mtd, NAND_CMD_READOOB, 0, page);
 
 	memcpy_fromio(buf, priv->nand.IO_ADDR_R + REG_ECC_FIFO_0,
 		      min(64u, mtd->oobsize));
 
-	wmt_nand_clear_bit(priv, REG_SMC_ENABLE, 0x02);
+	for (i=0; i < 64; i++)
+		printk("oob[%d] = %x\n", i, buf[i]);
+
+	reg_clear_bit(priv, REG_SMC_ENABLE, 0x02);
 	return 0;
 }
 
-static void wmt_nand_init_chip(struct nand_priv *priv)
+static int wmt_nand_init_chip(struct nand_priv *priv)
 {
 	unsigned long t;
 	u32 page_per_block_div;
 	u8 type = TYPESEL_CHECK_ALLFF | TYPESEL_WP_DIS | TYPESEL_DIRECT_MAP |
 		  TYPESEL_WIDTH_8 | TYPESEL_DIRECT_MAP;
 
+	/* Most NAND will be >512 byte writesize so make this the default */
+	priv->nand.bbt_td = &nand_bbt_main_descr_2048;
+	priv->nand.bbt_md = &nand_bbt_mirror_descr_2048;
+	priv->nand.ecc.prepad = 1;
+	priv->nand.ecc.postpad = 8;
+
 	switch (priv->mtd.writesize) {
 	case 512:
 		type |= TYPESEL_PAGE_512;
+		priv->nand.ecc.size = 512;
+		priv->nand.ecc.bytes = 3;
+		priv->nand.ecc.steps = 1;
+		priv->nand.ecc.prepad = 4;
+		priv->nand.ecc.postpad = 9;
+		priv->nand.ecc.layout = &wmt_oobinfo_512;
+		/* Override default for 512 byte writesize */
+		priv->nand.bbt_td = &nand_bbt_main_descr_512;
+		priv->nand.bbt_md = &nand_bbt_mirror_descr_512;
 		break;
 	case 2048:
 		type |= TYPESEL_PAGE_2K;
+		priv->nand.ecc.size = 512;
+		priv->nand.ecc.bytes = 8;
+		priv->nand.ecc.steps = 4;
+		priv->nand.ecc.layout = &wmt_oobinfo_2K_4K;
 		break;
 	case 4096:
 		type |= TYPESEL_PAGE_4K;
+		priv->nand.ecc.size = 512;
+		priv->nand.ecc.bytes = 8;
+		priv->nand.ecc.steps = 8;
+		priv->nand.ecc.layout = &wmt_oobinfo_2K_4K;
 		break;
 	case 8192:
 		type |= TYPESEL_PAGE_8K;
+		priv->nand.ecc.size = 1024;
+		priv->nand.ecc.bytes = 42;
+		priv->nand.ecc.steps = 8;
+		priv->nand.ecc.layout = &wmt_oobinfo_8K;
+		break;
+	case 16384:
+		type |= TYPESEL_PAGE_16K;
+		priv->nand.ecc.size = 1024;
+		priv->nand.ecc.bytes = 70;
+		priv->nand.ecc.steps = 16;
+		priv->nand.ecc.layout = &wmt_oobinfo_16K;
 		break;
 	default:
-		BUG();
+		dev_err(priv->dev, "Unsupported write size (%d)\n",
+			priv->mtd.writesize);
+		return -EINVAL;
 	}
 
 	writeb(type, priv->nand.IO_ADDR_R + REG_NAND_TYPE_SEL);
@@ -862,9 +1013,10 @@ static void wmt_nand_init_chip(struct nand_priv *priv)
 		page_per_block_div = 5;
 		break;
 	default:
-		BUG();
+		dev_err(priv->dev, "Unsupport pages per block (%d)\n",
+			priv->mtd.erasesize / priv->mtd.writesize);
+		return -EINVAL;
 	}
-	printk("mtd pages_per_block = %d\n", (2 ^ (page_per_block_div + 4)));
 
 	t = readl(priv->nand.IO_ADDR_R + REG_PAGESIZE_DIVIDER_SEL);
 	t &= ~PAGE_BLOCK_DIVISOR_MASK;
@@ -886,16 +1038,21 @@ static void wmt_nand_init_chip(struct nand_priv *priv)
 
 	writel(t, priv->nand.IO_ADDR_R + REG_ECC_BCH_CTRL);
 
-	/* enable hardware ecc */
-	wmt_nand_clear_bit(priv, REG_MISC_CTRL, MISCCTRL_SOFTWARE_ECC);
+	/* set ecc mode*/
+	if (priv->nand.ecc.mode == NAND_ECC_SOFT) {
+		reg_set_bit(priv, REG_MISC_CTRL, MISCCTRL_SOFTWARE_ECC);
+		reg_clear_bit(priv, REG_ECC_BCH_INT_MASK, EBIM_INT_EN);
+	} else {
+		reg_clear_bit(priv, REG_MISC_CTRL, MISCCTRL_SOFTWARE_ECC);
+		reg_set_bit(priv, REG_ECC_BCH_INT_MASK, EBIM_INT_EN);
+	}
 
-	/* enable ecc interrupt */
-	writew(EBIM_INT_EN, priv->nand.IO_ADDR_R + REG_ECC_BCH_INT_MASK);
+	return 0;
 }
 
 static void wmt_nand_write_buf(struct mtd_info *mtd, const uint8_t * buf, int len)
 {
-	struct nand_priv *priv = wmt_mtd_to_priv(mtd);
+	struct nand_priv *priv = to_nand_priv(mtd);
 
 	len = min(len, (DMA_BUFFER_SIZE - priv->dataptr));
 
@@ -905,7 +1062,7 @@ static void wmt_nand_write_buf(struct mtd_info *mtd, const uint8_t * buf, int le
 
 static void wmt_nand_read_buf(struct mtd_info *mtd, uint8_t * buf, int len)
 {
-	struct nand_priv *priv = wmt_mtd_to_priv(mtd);
+	struct nand_priv *priv = to_nand_priv(mtd);
 
 	len = min(len, (DMA_BUFFER_SIZE - priv->dataptr));
 
@@ -934,17 +1091,22 @@ static irqreturn_t wmt_nand_irq(int irq_num, void *_data)
 
 	int loop_guard = 1 << 20;
 
-	if (wmt_nand_get_bit(priv, REG_ECC_BCH_INT_STAT1, EBIS1_ERROR)) {
+	printk("nand_irq\n");
+	printk("MISC_STAT_PORT = %x\n", readl(priv->nand.IO_ADDR_R + REG_MISC_STAT_PORT));
+	printk("HOST_STAT_CHANGE = %x\n", readl(priv->nand.IO_ADDR_R + REG_HOST_STAT_CHANGE));
+
+	if (reg_get_bit(priv, REG_ECC_BCH_INT_STAT1, EBIS1_ERROR)) {
 		wmt_nand_correct_error(priv);
 		return IRQ_HANDLED;
 	}
 
-	while (--loop_guard && !wmt_nand_get_busy2ready(priv))
+	while (--loop_guard && !wmt_get_b2r(priv))
 		cpu_relax();
 
-	BUG_ON(!loop_guard);
+	if (!loop_guard)
+		dev_err(priv->dev, "busy-to-ready not clear in nand irq\n");
 
-	wmt_nand_clear_busy2ready(priv);
+	wmt_clear_b2r(priv);
 	complete(&priv->nand_complete);
 
 	return IRQ_HANDLED;
@@ -991,8 +1153,13 @@ static int wmt_nand_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
+	if (of_property_read_u32(np, "clock-rate", &priv->clk_rate)) {
+		dev_warn(priv->dev, "clock-rate not found. Default 50Mhz");
+		priv->clk_rate = 50000000;
+	}
+
 	priv->dmabuf = dmam_alloc_coherent(priv->dev, DMA_BUFFER_SIZE,
-					   &priv->dmaaddr, GFP_KERNEL);
+					   &priv->dma_addr, GFP_KERNEL);
 	if (!priv->dmabuf) {
 		dev_err(priv->dev, "Failed to allocate dma memory");
 		return -ENOMEM;
@@ -1034,20 +1201,13 @@ static int wmt_nand_probe(struct platform_device *pdev)
 	priv->mtd.owner = THIS_MODULE;
 	priv->mtd.name = "wmt_nand";
 
-	priv->nand.bbt_td = &nand_bbt_main_descr_2048;
-	priv->nand.bbt_md = &nand_bbt_mirror_descr_2048;
-	
 	ecc_mode = of_get_nand_ecc_mode(np);
 	priv->nand.ecc.mode = ecc_mode < 0 ? NAND_ECC_SOFT : ecc_mode;
-	priv->nand.ecc.layout = &vt8500_oobinfo;
-	priv->nand.ecc.size = 512;
-	priv->nand.ecc.bytes = 8;
-	priv->nand.ecc.steps = 8;
 	priv->nand.ecc.strength = 4;
 
 	priv->nand.buffers = devm_kzalloc(priv->dev, sizeof(*priv->nand.buffers), GFP_KERNEL);
 	if (!priv->nand.buffers) {
-		printk("failed to allocate buffers\n");
+		dev_err(priv->dev, "failed to allocate NAND buffers\n");
 		return -ENOMEM;
 	}
 
@@ -1080,22 +1240,22 @@ static int wmt_nand_probe(struct platform_device *pdev)
 	clk_prepare_enable(priv->clk);
 	wmt_nand_startup(priv);
 
-	//wmt_nand_set_clock(priv);
+	wmt_nand_set_clock(priv);
 
 	err = nand_scan_ident(&priv->mtd, 1, NULL);
 	if (err) {
-		printk("nand_scan_ident() failed\n");
+		dev_err(priv->dev, "nand_scan_ident() failed\n");
 		clk_disable_unprepare(priv->clk);
 		return -ENXIO;
 	}
 
-	printk("mtd erasesize = %d\n", priv->mtd.erasesize);
-	printk("mtd writesize = %d\n", priv->mtd.writesize);
-	wmt_nand_init_chip(priv);
+	err = wmt_nand_init_chip(priv);
+	if (err)
+		return err;
 
 	err = nand_scan_tail(&priv->mtd);
 	if (err) {
-		printk("nand_scan_tail() failed\n");
+		dev_err(priv->dev, "nand_scan_tail() failed\n");
 		clk_disable_unprepare(priv->clk);
 		return -ENXIO;
 	}
@@ -1103,7 +1263,7 @@ static int wmt_nand_probe(struct platform_device *pdev)
 	mtd_ppd.of_node = np;
 	err = mtd_device_parse_register(&priv->mtd, NULL, &mtd_ppd, NULL, 0);
 	if (err) {
-		printk("mtd_device_register() failed\n");
+		dev_err(priv->dev, "mtd_device_parse_register() failed\n");
 		nand_release(&priv->mtd);
 		return err;
 	}
