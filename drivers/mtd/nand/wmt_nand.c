@@ -836,23 +836,15 @@ static void wmt_nand_param(struct nand_priv *priv, int column)
 
 	wmt_nand_trigger_command(priv, COMCTRL_NO_DATA | COMCTRL_NFC_2_NAND |
 					COMCTRL_CYCLES_NONE, addr_cycle + 1);
-	wmt_nand_wait_transfer_ready(priv);
+	wmt_nand_wait_completion(priv);
 
-	/*
-	 * On my WM8850 with Micron NAND, first byte is always 0 and corrupts
-	 * the param table, so skip byte 0 in the buffer. Possibly a NAND
-	 * controller bug as the vendor doesn't use ONFI at all.
-	 */
-	priv->dataptr = 1;
-
+	priv->dataptr = 0;
 	for (i=0; i <= 768; i++) {
 		wmt_nand_trigger_command(priv, COMCTRL_HAS_DATA |
 						COMCTRL_NAND_2_NFC |
 						COMCTRL_CYCLES_SINGLE, 0);
 		wmt_nand_wait_transfer_ready(priv);
 		wmt_wait_nand_idle(priv);
-
-		udelay(100);
 
 		priv->dmabuf[i] = readb(priv->nand.IO_ADDR_R);
 	}
@@ -915,7 +907,6 @@ static int wmt_nand_read_oob(struct mtd_info *mtd, struct nand_chip *chip,
 
 	struct nand_priv *priv = to_nand_priv(mtd);
 	uint8_t *buf = chip->oob_poi;
-	int i;
 
 	reg_set_bit(priv, REG_SMC_ENABLE, 0x02);
 
@@ -923,9 +914,6 @@ static int wmt_nand_read_oob(struct mtd_info *mtd, struct nand_chip *chip,
 
 	memcpy_fromio(buf, priv->nand.IO_ADDR_R + REG_ECC_FIFO_0,
 		      min(64u, mtd->oobsize));
-
-	for (i=0; i < 64; i++)
-		printk("oob[%d] = %x\n", i, buf[i]);
 
 	reg_clear_bit(priv, REG_SMC_ENABLE, 0x02);
 	return 0;
@@ -1092,8 +1080,6 @@ static irqreturn_t wmt_nand_irq(int irq_num, void *_data)
 	int loop_guard = 1 << 20;
 
 	printk("nand_irq\n");
-	printk("MISC_STAT_PORT = %x\n", readl(priv->nand.IO_ADDR_R + REG_MISC_STAT_PORT));
-	printk("HOST_STAT_CHANGE = %x\n", readl(priv->nand.IO_ADDR_R + REG_HOST_STAT_CHANGE));
 
 	if (reg_get_bit(priv, REG_ECC_BCH_INT_STAT1, EBIS1_ERROR)) {
 		wmt_nand_correct_error(priv);
