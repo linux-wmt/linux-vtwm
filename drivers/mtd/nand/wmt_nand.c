@@ -145,6 +145,8 @@
 /* 0x2C REG_HOST_STAT_CHANGE */
 #define HSC_B2R				BIT(3)
 
+/* 0x40 REG_REMAINDER */
+
 /* 0x48 REG_NAND_TYPE_SEL */
 #define TYPESEL_PAGE_512		0
 #define TYPESEL_PAGE_2K			1
@@ -774,9 +776,11 @@ static void wmt_nand_read_command(struct nand_priv *priv, int page_addr,
 	init_completion(&priv->nand_complete);
 
 	if (command == NAND_CMD_READOOB && column != -1) {
-		column +=
+		/*column +=
 		    (priv->nand.ecc.size +
 		     priv->nand.ecc.bytes) * priv->nand.ecc.steps;
+		*/
+		column = priv->mtd.writesize + 294;
 	}
 
 	addr_cycle = wmt_nand_set_addr(priv, column, page_addr);
@@ -858,8 +862,8 @@ static void wmt_nand_cmdfunc(struct mtd_info *mtd, unsigned command,
 	struct nand_priv *priv = to_nand_priv(mtd);
 	int addr_cycle = 0;
 
-	dev_info(priv->dev, "Command: %u, column: %x, page_addr: %x\n",
-		command, column, page_addr);
+/*	dev_info(priv->dev, "Command: %u, column: %x, page_addr: %x\n",
+		command, column, page_addr);*/
 
 	init_completion(&priv->nand_complete);
 
@@ -909,13 +913,16 @@ static int wmt_nand_read_oob(struct mtd_info *mtd, struct nand_chip *chip,
 	uint8_t *buf = chip->oob_poi;
 
 	reg_set_bit(priv, REG_SMC_ENABLE, 0x02);
+	writew(0x2B00, priv->nand.IO_ADDR_R + REG_REMAINDER);
 
 	chip->cmdfunc(mtd, NAND_CMD_READOOB, 0, page);
+
+	writew(0x2A00, priv->nand.IO_ADDR_R + REG_REMAINDER);
+	reg_clear_bit(priv, REG_SMC_ENABLE, 0x02);
 
 	memcpy_fromio(buf, priv->nand.IO_ADDR_R + REG_ECC_FIFO_0,
 		      min(64u, mtd->oobsize));
 
-	reg_clear_bit(priv, REG_SMC_ENABLE, 0x02);
 	return 0;
 }
 
@@ -1079,7 +1086,7 @@ static irqreturn_t wmt_nand_irq(int irq_num, void *_data)
 
 	int loop_guard = 1 << 20;
 
-	printk("nand_irq\n");
+//	printk("nand_irq\n");
 
 	if (reg_get_bit(priv, REG_ECC_BCH_INT_STAT1, EBIS1_ERROR)) {
 		wmt_nand_correct_error(priv);
