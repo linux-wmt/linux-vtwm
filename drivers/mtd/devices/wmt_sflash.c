@@ -203,37 +203,12 @@ static void sf_calc_ccr(struct wmt_sf_chip *chip)
 
 static int wmt_sf_init_hw(struct wmt_sf_data *info)
 {
-	u32 strap;
 	u32 phys_addr;
-	struct device_node *np;
-	void __iomem *gpio_base;
 
-	np = of_find_compatible_node(NULL, NULL, "wm,wm8650-gpio");
-	if (!np) {
-		dev_err(info->dev, "Unable to find GPIO node\n");
-		return -1;
-	}
-
-	gpio_base = of_iomap(np, 0);
-	if (!gpio_base) {
-		dev_err(info->dev, "Failed to map gpio memory\n");
-		return -1;
-	}
-
-	strap = readl_relaxed(gpio_base + 0x100);
-	iounmap(gpio_base);
-
-	if ((strap & 0x06) == 0) {
-		phys_addr = 0xFFFFFFFF;
-		writel(0x00000011, info->base + SF_SPI_RD_WR_CTR);
-		writel(0xFF800800, info->base + SF_CHIP_SEL_0_CFG);
-		writel(0x00030000, info->base + SF_SPI_INTF_CFG);
-	} else {
-		phys_addr = 0xEFFFFFFF;
-		writel(0x00000011, info->base + SF_SPI_RD_WR_CTR);
-		writel(0xEF800800, info->base + SF_CHIP_SEL_0_CFG);
-		writel(0x00030000, info->base + SF_SPI_INTF_CFG);
-	}
+	phys_addr = 0xFFFFFFFF;
+	writel(0x00000011, info->base + SF_SPI_RD_WR_CTR);
+	writel(0xFF800800, info->base + SF_CHIP_SEL_0_CFG);
+	writel(0x00030000, info->base + SF_SPI_INTF_CFG);
 
 	info->chip[0].id = FLASH_UNKNOWN;
 	info->chip[1].id = FLASH_UNKNOWN;
