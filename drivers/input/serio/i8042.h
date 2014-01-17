@@ -14,7 +14,9 @@
  * Arch-dependent inline functions and defines.
  */
 
-#if defined(CONFIG_MACH_JAZZ)
+#if defined(CONFIG_SERIO_I8042_DT)
+#include "i8042-dt.h"
+#elif defined(CONFIG_MACH_JAZZ)
 #include "i8042-jazzio.h"
 #elif defined(CONFIG_SGI_HAS_I8042)
 #include "i8042-ip22io.h"

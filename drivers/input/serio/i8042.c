@@ -1575,12 +1575,18 @@ static int i8042_remove(struct platform_device *dev)
 	return 0;
 }
 
+static struct of_device_id i8042_dt_ids[] = {
+	{ .compatible = "intel,8042" },
+	{ /* Sentinel */ },
+};
+
 static struct platform_driver i8042_driver = {
 	.driver		= {
 		.name	= "i8042",
 #ifdef CONFIG_PM
 		.pm	= &i8042_pm_ops,
 #endif
+		.of_match_table = i8042_dt_ids,
 	},
 	.remove		= i8042_remove,
 	.shutdown	= i8042_shutdown,
@@ -1592,7 +1598,9 @@ static struct notifier_block i8042_kbd_bind_notifier_block = {
 
 static int __init i8042_init(void)
 {
+#ifndef CONFIG_SERIO_I8042_DT
 	struct platform_device *pdev;
+#endif
 	int err;
 
 	dbg_init();
@@ -1605,11 +1613,17 @@ static int __init i8042_init(void)
 	if (err)
 		goto err_platform_exit;
 
+#ifdef CONFIG_SERIO_I8042_DT
+	err = platform_driver_probe(&i8042_driver, i8042_probe);
+	if (err)
+		goto err_platform_exit;
+#else
 	pdev = platform_create_bundle(&i8042_driver, i8042_probe, NULL, 0, NULL, 0);
 	if (IS_ERR(pdev)) {
 		err = PTR_ERR(pdev);
 		goto err_platform_exit;
 	}
+#endif
 
 	bus_register_notifier(&serio_bus, &i8042_kbd_bind_notifier_block);
 	panic_blink = i8042_panic_blink;
