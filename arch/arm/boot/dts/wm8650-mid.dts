@@ -11,6 +11,21 @@
 
 / {
 	model = "Wondermedia WM8650-MID Tablet";
+
+	backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pwm 0 50000>;
+
+		brightness-levels = <0 4 8 16 32 64 128 255>;
+		default-brightness-level = <5>;
+	};
+
+	powerkey: pwrkey@0 {
+		compatible = "wm,power-keypad";
+		interrupt-parent = <&intc0>;
+		interrupts = <22>;
+		keymap = <116>; /* KEY_POWER */
+	};
 };
 
 &fb {
@@ -29,6 +44,21 @@
 			vfront-porch = <11>;
 			vsync-len = <1>;
 		};
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&pinctrl {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c>;
+
+	i2c: i2c {
+		wm,pins = <168 169 76 77>;
+		wm,function = <2>; /* alt */
+		wm,pull = <2>; /* pull-up */
 	};
 };
 

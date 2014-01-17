@@ -12,17 +12,103 @@
 
 / {
 	model = "VIA APC8750";
+
+	fb@d8050800 {
+		compatible = "wm,wm8505-fb";
+		reg = <0xd8050800 0x200>;
+		bits-per-pixel = <16>;
+		clocks = <&clkdvo>;
+
+		display-timings {
+			native-mode = <&timing0>;
+			timing0: 1024x768 {
+				clock-frequency = <65000000>;
+				hactive = <1024>;
+				vactive = <768>;
+				hfront-porch = <25>;
+				hback-porch = <295>;
+				hsync-len = <136>;
+				vback-porch = <36>;
+				vfront-porch = <2>;
+				vsync-len = <6>;
+			};
+		};
+	};
+
+	powerkey: pwrkey@0 {
+		compatible = "wm,power-keypad";
+		interrupt-parent = <&intc0>;
+		interrupts = <22>;
+		keymap = <116>; /* KEY_POWER */
+	};
+};
+
+&nand {
+	nand-ecc-mode = "hw";
+	nand-bus-width = <8>;
+	nand-on-flash-bbt;
+
+	partition@0 {
+		label = "w-load";
+		reg = <0x00000000 0x100000>;
+	};
+	partition@100000 {
+		label = "u-boot env cfg";
+		reg = <0x00100000 0x900000>;
+	};
+	partition@A00000 {
+		label = "u-boot";
+		reg = <0x00A00000 0x900000>;
+	};
+	partition@1300000 {
+		label = "kernel";
+		reg = <0x01300000 0x800000>;
+	};
+	partition@1B00000 {
+		label = "initrd";
+		reg = <0x01B00000 0x600000>;
+	};
+	partition@2100000 {
+		label = "filesystem";
+		reg = <0x02100000 0x10000000>;
+	};
+	partition@12100000 {
+		label = "u-boot-logo";
+		reg = <0x12100000 0x200000>;
+	};
+	partition@12300000 {
+		label = "kernel-logo";
+		reg = <0x12300000 0x400000>;
+	};
+	partition@16300000 {
+		label = "android-data";
+		reg = <0x16300000 0x40000000>;
+	};
+	partition@56300000 {
+		label = "android-cache";
+		reg = <0x56300000 0x8000000>;
+	};
+	partition@5E300000 {
+		label = "LocalDisk";
+		reg = <0x5E300000 0x21D00000>;
+	};
 };
 
 &pinctrl {
 	pinctrl-names = "default";
-	pinctrl-0 = <&i2c>;
+	pinctrl-0 = <&i2c &vga>;
 
 	i2c: i2c {
 		wm,pins = <168 169 170 171>;
 		wm,function = <2>;	/* alt */
 		wm,pull = <2>;	/* pull-up */
 	};
+
+	vga: vga {
+		wm,pins = <72 73 74 75 76 77 78 79>;
+		wm,function = <2>;	/* alt */
+	};
+
 };
 
 &uart0 {

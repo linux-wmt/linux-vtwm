@@ -56,7 +56,7 @@
 		};
 
 		pinctrl: pinctrl@d8110000 {
-			compatible = "wm,wm8750-pinctrl";
+			compatible = "wm,wm8750-pinctrl","wm,prizm-pinctrl";
 			reg = <0xd8110000 0x10000>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
@@ -147,6 +147,15 @@
 					divisor-reg = <0x310>;
 				};
 
+				clkdvo: dvo {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&pllc>;
+					divisor-reg = <0x36C>;
+					enable-reg = <0x258>;
+					enable-bit = <30>;
+				};
+
 				clkuart0: uart0 {
 					#clock-cells = <0>;
 					compatible = "via,vt8500-device-clock";
@@ -214,6 +223,24 @@
 					enable-bit = <0>;
 				};
 
+				clksf: sf {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&pllb>;
+					divisor-reg = <0x314>;
+					enable-reg = <0x254>;
+					enable-bit = <23>;
+				};
+
+				clknand: nand {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&pllb>;
+					divisor-reg = <0x318>;
+					enable-reg = <0x254>;
+					enable-bit = <16>;
+				};
+
 				clki2c0: i2c0clk {
 					#clock-cells = <0>;
 					compatible = "via,vt8500-device-clock";
@@ -232,6 +259,21 @@
 					enable-bit = <9>;
 				};
 			};
+		};
+
+		nand: nand@d8002000 {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			compatible = "wm,wm8750-nand";
+			reg = <0xd8009000 0x400>;
+			clocks = <&clknand>;
+			interrupts = <28 29>;
+		};
+
+		sf@d8002000 {
+			compatible = "wm,wm8505-sf";
+			reg = <0xd8002000 0x400>;
+			clocks = <&clksf>;
 		};
 
 		pwm: pwm@d8220000 {
@@ -342,6 +384,13 @@
 			interrupts = <18>;
 			clocks = <&clki2c1>;
 			clock-frequency = <400000>;
+		};
+
+		eth0@d8320000 {
+			compatible = "via,velocity-vt6110";
+			reg = <0xd8004000 0x400>;
+			interrupts = <10>;
+			no-eeprom;
 		};
 	};
 };

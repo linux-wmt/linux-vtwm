@@ -11,6 +11,14 @@
 
 / {
 	model = "Benign BV07 Netbook";
+
+	backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pwm 0 50000>;
+
+		brightness-levels = <0 4 8 16 32 64 128 255>;
+		default-brightness-level = <5>;
+	};
 };
 
 &fb {
@@ -28,6 +36,20 @@
 			vfront-porch = <11>;
 			vsync-len = <1>;
 		};
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&pinctrl {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c>;
+
+	i2c: i2c {
+		wm,pins = <88 89 90 91>;
+		wm,function = <2>;
 	};
 };
 

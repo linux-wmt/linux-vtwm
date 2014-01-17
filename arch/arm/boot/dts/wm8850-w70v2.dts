@@ -23,6 +23,13 @@
 		brightness-levels = <0 40 60 80 100 130 190 255>;
 		default-brightness-level = <5>;
 	};
+
+	powerkey: pwrkey@0 {
+		compatible = "wm,power-keypad";
+		interrupt-parent = <&intc0>;
+		interrupts = <22>;
+		keymap = <116>; /* KEY_POWER */
+	};
 };
 
 &fb {
@@ -40,6 +47,21 @@
 			vfront-porch = <11>;
 			vsync-len = <1>;
 		};
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&pinctrl {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c>;
+
+	i2c: i2c {
+		wm,pins = <168 169 170 171 172 173>;
+		wm,function = <2>;	/* alt */
+		wm,pull = <2>;	/* pull-up */
 	};
 };
 
