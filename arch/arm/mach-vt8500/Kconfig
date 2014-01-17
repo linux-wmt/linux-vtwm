@@ -9,10 +9,11 @@ config ARCH_VT8500
 
 config ARCH_WM8505
 	bool "VIA/Wondermedia 85xx and WM8650"
- 	depends on ARCH_MULTI_V5
- 	select ARCH_VT8500
- 	select CPU_ARM926T
- 	help
+	depends on ARCH_MULTI_V5
+	select ARCH_VT8500
+	select CPU_ARM926T
+	select ARCH_MIGHT_HAVE_PC_SERIO
+	help
 
 config ARCH_WM8750
 	bool "WonderMedia WM8750"
