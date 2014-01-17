@@ -502,6 +502,15 @@ config MTD_NAND_FSMC
 	  Enables support for NAND Flash chips on the ST Microelectronics
 	  Flexible Static Memory Controller (FSMC)
 
+config MTD_NAND_WMT
+	tristate "Support for NAND on WonderMedia SoCs"
+	depends on ARCH_VT8500
+	help
+	  Enables support for the NAND Flash controller on WonderMedia
+	  WM8xxx-series SoCs.
+
+	  If this drivers is compiled as a module, it will be named wmt_nand.
+
 config MTD_NAND_XWAY
 	tristate "Support for NAND on Lantiq XWAY SoC"
 	depends on LANTIQ && SOC_TYPE_XWAY
