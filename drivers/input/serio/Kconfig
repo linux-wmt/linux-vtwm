@@ -21,9 +21,9 @@ if SERIO
 config SERIO_I8042
 	tristate "i8042 PC Keyboard controller"
 	default y
-	depends on !PARISC && (!ARM || FOOTBRIDGE_HOST) && \
-		   (!SUPERH || SH_CAYMAN) && !M68K && !BLACKFIN && !S390 && \
-		   !ARC
+	depends on (!PARISC && (!ARM || ARCH_SHARK || FOOTBRIDGE_HOST) && \
+		   (!SUPERH || SH_CAYMAN) && !M68K && !BLACKFIN && !S390) || \
+		   (SERIO_I8042_DT)
 	help
 	  i8042 is the chip over which the standard AT keyboard and PS/2
 	  mouse are connected to the computer. If you use these devices,
@@ -33,6 +33,11 @@ config SERIO_I8042
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called i8042.
+
+config SERIO_I8042_DT
+	tristate "i8042 Keyboard controller DT support" if EXPERT || !X86
+	depends on USE_OF
+	select SERIO_I8042
 
 config SERIO_SERPORT
 	tristate "Serial port line discipline"
