@@ -276,6 +276,17 @@ static int wmt_pctl_dt_node_to_map_pull(struct wmt_pinctrl_data *data,
 	if (!configs)
 		return -ENOMEM;
 
+	switch (pull) {
+	case 0:
+		pull = PIN_CONFIG_BIAS_DISABLE;
+		break;
+	case 1:
+		pull = PIN_CONFIG_BIAS_PULL_DOWN;
+		break;
+	case 2:
+		pull = PIN_CONFIG_BIAS_PULL_UP;
+		break;
+	}
 	configs[0] = pull;
 
 	map->type = PIN_MAP_TYPE_CONFIGS_PIN;
