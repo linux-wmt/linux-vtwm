@@ -199,6 +199,15 @@
 					enable-bit = <17>;
 				};
 
+				clksf: sf {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&pllb>;
+					divisor-reg = <0x314>;
+					enable-reg = <0x254>;
+					enable-bit = <23>;
+				};
+
 				clksdhc: sdhc {
 					#clock-cells = <0>;
 					compatible = "via,vt8500-device-clock";
@@ -318,6 +327,12 @@
 			compatible = "via,vt8500-rtc";
 			reg = <0xd8100000 0x10000>;
 			interrupts = <48>;
+		};
+
+		sf@d8002000 {
+			compatible = "wm,wm8505-sf";
+			reg = <0xd8002000 0x400>;
+			clocks = <&clksf>;
 		};
 
 		sdmmc0: sdhc@d800a000 {
