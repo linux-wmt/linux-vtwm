@@ -23,6 +23,7 @@
 #include <linux/of_address.h>
 
 #include <linux/mtd/mtd.h>
+#include <linux/mtd/partitions.h>
 
 /* controller only supports erase size of 64KB */
 #define WMT_ERASESIZE			0x10000
@@ -484,6 +485,9 @@ static int sf_read(struct mtd_info *mtd, loff_t from, size_t len,
 static int mtdsf_init_device(struct device *dev, struct mtd_info *mtd,
 					unsigned long size, char *name)
 {
+	struct mtd_part_parser_data ppdata;
+
+	ppdata.of_node = dev->of_node;
 	mtd->name = name;
 	mtd->type = MTD_NORFLASH;
 	mtd->flags = MTD_CAP_NORFLASH;
@@ -495,7 +499,7 @@ static int mtdsf_init_device(struct device *dev, struct mtd_info *mtd,
 	mtd->_write = sf_write;
 	mtd->writesize = 1;
 
-	if (mtd_device_register(mtd, NULL, 0)) {
+	if (mtd_device_parse_register(mtd, NULL, &ppdata, NULL, 0)) {
 		dev_err(dev, "Erroring adding MTD device\n");
 		return -EIO;
 	}
