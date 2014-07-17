@@ -352,7 +352,7 @@ static int sf_sector_erase(struct wmt_sf_data *info, u32 addr)
 	int chip;
 	u32 val;
 
-	if ((info->sf_base_phys + addr) < info->chip[0].addr_phys) {
+	if ((info->sf_base_phys + addr) >= info->chip[0].addr_phys) {
 		chip = 0;
 		writel(SF_CS0_WR_EN, info->base + SF_SPI_WR_EN_CTR);
 	} else {
