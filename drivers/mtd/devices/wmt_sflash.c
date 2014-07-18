@@ -51,7 +51,8 @@
 #define SF_CS1_WR_EN			BIT(1)
 
 /* SF_SPI_ER_CTR bit fields */
-#define SF_SEC_ER_EN			BIT(31)
+#define SF_SEC_ER_EN			BIT(15)
+#define SF_CHIP_ER_EN			BIT(0)
 
 /* SF_SPI_ERROR_STATUS bit fields */
 #define SF_ERR_TIMEOUT			BIT(31)
