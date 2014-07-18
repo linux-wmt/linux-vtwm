@@ -15,6 +15,7 @@
 #include <linux/io.h>
 #include <linux/clk.h>
 #include <linux/errno.h>
+#include <linux/log2.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 
@@ -159,7 +160,6 @@ struct wmt_sf_chip {
 	u32	id;
 	u32	size;
 	u32	addr_phys;
-	u32	ccr;
 };
 
 struct wmt_sf_data {
@@ -187,31 +187,23 @@ static u32 sf_get_chip_size(struct device *dev, u32 id)
 	return 0;
 }
 
-static void sf_calc_ccr(struct wmt_sf_chip *chip)
+static u32 sf_calc_cfg_reg(struct wmt_sf_chip *chip)
 {
-	unsigned int cnt = 0, size;
+	u32 addr_field = chip->addr_phys;
+	u32 size_field = order_base_2(chip->size) - 15;
 
-	size = chip->size;
-	while (size) {
-		size >>= 1;
-		cnt++;
-	}
-	cnt -= 16;
-	cnt = cnt << 8;
-	chip->ccr = (chip->addr_phys | cnt);
+	addr_field &= ~(WMT_ERASESIZE - 1);
+	size_field &= 0xff;
+	size_field <<= 8;
+
+	return addr_field | size_field;
 }
 
 static int wmt_sf_init_hw(struct wmt_sf_data *info)
 {
-	u32 phys_addr;
+	u32 phys_addr = 0xFFFFFFFF;
 
-	phys_addr = 0xFFFFFFFF;
-	writel(0x00000011, info->base + SF_SPI_RD_WR_CTR);
-	writel(0xFF800800, info->base + SF_CHIP_SEL_0_CFG);
 	writel(0x00030000, info->base + SF_SPI_INTF_CFG);
-
-	info->chip[0].id = FLASH_UNKNOWN;
-	info->chip[1].id = FLASH_UNKNOWN;
 
 	/* Read serial flash ID */
 	writel(0x11, info->base + SF_SPI_RD_WR_CTR);
@@ -236,8 +228,8 @@ static int wmt_sf_init_hw(struct wmt_sf_data *info)
 	pr_info("SFC: Chip 0 @ %08x (size: %d)\n", info->chip[0].addr_phys,
 							info->chip[0].size);
 
-	sf_calc_ccr(&info->chip[0]);
-	writel(info->chip[0].ccr, info->base + SF_CHIP_SEL_0_CFG);
+	writel(sf_calc_cfg_reg(&info->chip[0]),
+	       info->base + SF_CHIP_SEL_0_CFG);
 
 	if (info->chip[1].id != FLASH_UNKNOWN) {
 		info->chip[1].size = sf_get_chip_size(info->dev,
@@ -254,8 +246,8 @@ static int wmt_sf_init_hw(struct wmt_sf_data *info)
 		pr_info("SFC: Chip 1 @ %08x (size: %d)\n",
 				info->chip[1].addr_phys, info->chip[1].size);
 
-		sf_calc_ccr(&info->chip[1]);
-		writel(info->chip[1].ccr, info->base + SF_CHIP_SEL_1_CFG);
+		writel(sf_calc_cfg_reg(&info->chip[1]),
+		       info->base + SF_CHIP_SEL_1_CFG);
 	}
 
 	return 0;
