@@ -1,0 +1,14 @@
+/dts-v1/;
+#include "wm8950.dtsi"
+
+/ {
+	model = "VIA APC Rock board";
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&uart1 {
+	status = "okay";
+};
