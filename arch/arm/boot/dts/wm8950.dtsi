@@ -1,0 +1,5 @@
+/* No material differences discovered to date vs. WM8850, apart from labels
+ * This file to be amended once such differences are understood
+ * For now just inherit WM8850 configuration directly
+ */
+#include "wm8850.dtsi"
