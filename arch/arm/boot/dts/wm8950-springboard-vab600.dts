@@ -1,0 +1,26 @@
+/dts-v1/;
+#include "wm8950.dtsi"
+
+/ {
+	model = "VIA Springboard VAB-600";
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&sdmmc1 {
+	status = "okay";
+};
+
+&sdmmc2 {
+	status = "okay";
+};
+
+&sdmmc3 {
+	status = "okay";
+};

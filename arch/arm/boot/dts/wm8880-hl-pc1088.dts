@@ -1,0 +1,33 @@
+/dts-v1/;
+#include <dt-bindings/pwm/pwm.h>
+#include "wm8880.dtsi"
+
+/ {
+	model = "HL-PC1088 10-inch netbook (WonderMedia WM8880 based)";
+
+	backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pwm 0 50000 PWM_POLARITY_INVERTED>;
+
+		brightness-levels = <0 40 60 80 100 130 190 255>;
+		default-brightness-level = <5>;
+	};
+};
+
+&fb {
+	bits-per-pixel = <16>;
+	display-timings {
+		native-mode = <&timing0>;
+		timing0: 1024x600 {
+			clock-frequency = <0>; /* unused but required */
+			hactive = <1024>;
+			vactive = <600>;
+			hfront-porch = <40>;
+			hback-porch = <88>;
+			hsync-len = <0>;
+			vback-porch = <32>;
+			vfront-porch = <11>;
+			vsync-len = <1>;
+		};
+	};
+};
