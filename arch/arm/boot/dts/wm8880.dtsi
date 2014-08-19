@@ -8,6 +8,7 @@
 	cpus {
 		#address-cells = <1>;
 		#size-cells = <0>;
+		enable-method = "wm,prizm-smp";
 
 		cpu@0 {
 			device_type = "cpu";
@@ -49,6 +50,17 @@
 			reg = <0xd8018600 0x20>;
 			interrupts = <GIC_PPI 13
 			  (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>;
+		};
+
+		scu: snoop-control-unit@d8018000 {
+			compatible = "arm,cortex-a9-scu";
+			reg = <0xd8018000 0x58>;
+		};
+
+		/* PMC Hibernation scratch pad register 7 is the reset vector for CPU1 */
+		hsp7@d813004c {
+			compatible = "wm,secondary-cpu-vector";
+			reg = <0xd813004c 0x4>;
 		};
 
 		pinctrl: pinctrl@d8110000 {

@@ -6,6 +6,7 @@ config ARCH_VT8500
 	select PINCTRL
 	select GENERIC_CLOCKEVENTS
 	select ARM_GIC
+	select HAVE_ARM_SCU if SMP
 	select HAVE_ARM_TWD if SMP
 	help
 	  Support for VIA/WonderMedia VT8500/WM85xx System-on-Chip.
