@@ -210,6 +210,15 @@
 					enable-bit = <17>;
 				};
 
+				clksf: sf {
+					#clock-cells = <0>;
+					compatible = "via,vt8500-device-clock";
+					clocks = <&pllb>;
+					divisor-reg = <0x314>;
+					enable-reg = <0x254>;
+					enable-bit = <23>;
+				};
+
 				clksdhc: sdhc {
 					#clock-cells = <0>;
 					compatible = "via,vt8500-device-clock";
@@ -319,6 +328,37 @@
 			compatible = "via,vt8500-rtc";
 			reg = <0xd8100000 0x10000>;
 			interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>;
+		};
+
+		sf@d8002000 {
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			compatible = "wm,wm8505-sf";
+			reg = <0xd8002000 0x400>;
+			clocks = <&clksf>;
+
+			partition@0 {
+				label = "U-boot";
+				reg = <0 0x50000>;
+				read-only;
+			};
+
+			partition@1 {
+				label = "U-boot environment 1";
+				reg = <0x50000 0x10000>;
+			};
+
+			partition@2 {
+				label = "U-boot environment 2";
+				reg = <0x60000 0x10000>;
+			};
+
+			partition@3 {
+				label = "W-load";
+				reg = <0x70000 0x10000>;
+				read-only;
+			};
 		};
 
 		sdhc@d800a000 {
