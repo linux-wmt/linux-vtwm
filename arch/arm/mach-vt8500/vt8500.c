@@ -42,6 +42,10 @@
 #define VT8500_HCR_REG		0x12
 #define VT8500_PMSR_REG		0x60
 
+#ifdef CONFIG_SMP
+extern struct smp_operations wmt_smp_ops;
+#endif
+
 static void __iomem *pmc_base;
 
 static void vt8500_restart(enum reboot_mode mode, const char *cmd)
@@ -177,5 +181,6 @@ DT_MACHINE_START(WMT_DT, "VIA/Wondermedia SoC (Device Tree Support)")
 	.map_io		= vt8500_map_io,
 	.init_machine	= vt8500_init,
 	.restart	= vt8500_restart,
+	.smp		= smp_ops(wmt_smp_ops),
 MACHINE_END
 
