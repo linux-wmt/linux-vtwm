@@ -272,7 +272,7 @@
 		};
 
 		uart0: serial@d8200000 {
-			compatible = "via,vt8500-uart";
+			compatible = "wm,wm8880-uart";
 			reg = <0xd8200000 0x1040>;
 			interrupts = <GIC_SPI 32 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&clkuart0>;
@@ -280,7 +280,7 @@
 		};
 
 		uart1: serial@d82b0000 {
-			compatible = "via,vt8500-uart";
+			compatible = "wm,wm8880-uart";
 			reg = <0xd82b0000 0x1040>;
 			interrupts = <GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&clkuart1>;
@@ -288,18 +288,18 @@
 		};
 
                 uart2: serial@d8210000 {
-                        compatible = "via,vt8500-uart";
-                        reg = <0xd8210000 0x1040>;
-                        interrupts = <GIC_SPI 47 IRQ_TYPE_LEVEL_HIGH>;
-                        clocks = <&clkuart2>;
+			compatible = "wm,wm8880-uart";
+			reg = <0xd8210000 0x1040>;
+			interrupts = <GIC_SPI 47 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clkuart2>;
 			status = "disabled";
                 };
 
                 uart3: serial@d82c0000 {
-                        compatible = "via,vt8500-uart";
-                        reg = <0xd82c0000 0x1040>;
-                        interrupts = <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>;
-                        clocks = <&clkuart3>;
+			compatible = "wm,wm8880-uart";
+			reg = <0xd82c0000 0x1040>;
+			interrupts = <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clkuart3>;
 			status = "disabled";
                 };
 
