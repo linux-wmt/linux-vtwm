@@ -49,4 +49,12 @@ config PINCTRL_WM8850
 	  Say yes here to support the gpio/pin control module on
 	  Wondermedia WM8850 SoCs.
 
+config PINCTRL_WM8880
+	bool "Wondermedia WM8880 pin controller driver"
+	depends on ARCH_WM8850
+	select PINCTRL_WMT
+	help
+	  Say yes here to support the gpio/pin control module on
+	  Wondermedia WM8880 SoCs.
+
 endif

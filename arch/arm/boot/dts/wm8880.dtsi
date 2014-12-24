@@ -64,7 +64,7 @@
 		};
 
 		pinctrl: pinctrl@d8110000 {
-			compatible = "wm,wm8850-pinctrl";
+			compatible = "wm,wm8880-pinctrl";
 			reg = <0xd8110000 0x10000>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
