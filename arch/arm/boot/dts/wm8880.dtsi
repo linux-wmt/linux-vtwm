@@ -323,7 +323,7 @@
 
 		sdhc@d800a000 {
 			compatible = "wm,wm8505-sdhc";
-			reg = <0xd800a000 0x1000>;
+			reg = <0xd800a000 0x400>;
 			interrupts = <GIC_SPI 20 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&clksdhc>;
@@ -333,7 +333,7 @@
 
 		sdmmc1: sdhc@d800a400 {
 			compatible = "wm,wm8505-sdhc";
-			reg = <0xd800a400 0x1000>;
+			reg = <0xd800a400 0x400>;
 			interrupts = <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 2 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&clksdhc1>;
@@ -343,7 +343,7 @@
 
 		sdmmc2: sdhc@d800a800 {
 			compatible = "wm,wm8505-sdhc";
-			reg = <0xd800a800 0x1000>;
+			reg = <0xd800a800 0x400>;
 			interrupts = <GIC_SPI 11 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 12 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&clksdhc2>;

@@ -322,7 +322,7 @@
 
 		sdmmc0: sdhc@d800a000 {
 			compatible = "wm,wm8505-sdhc";
-			reg = <0xd800a000 0x1000>;
+			reg = <0xd800a000 0x400>;
 			interrupts = <20 21>;
 			clocks = <&clksdhc>;
 			bus-width = <4>;
@@ -331,7 +331,7 @@
 
 		sdmmc1: sdhc@d800a400 {
 			compatible = "wm,wm8505-sdhc";
-			reg = <0xd800a400 0x1000>;
+			reg = <0xd800a400 0x400>;
 			interrupts = <1 2>;
 			clocks = <&clksdhc1>;
 			bus-width = <4>;
@@ -341,7 +341,7 @@
 
 		sdmmc2: sdhc@d800a800 {
 			compatible = "wm,wm8505-sdhc";
-			reg = <0xd800a800 0x1000>;
+			reg = <0xd800a800 0x400>;
 			interrupts = <11 12>;
 			clocks = <&clksdhc2>;
 			bus-width = <4>;
@@ -351,7 +351,7 @@
 
 		sdmmc3: sdhc@d800ac00 {
 			compatible = "wm,wm8505-sdhc";
-			reg = <0xd800ac00 0x1000>;
+			reg = <0xd800ac00 0x400>;
 			interrupts = <13 14>;
 			clocks = <&clksdhc3>;
 			bus-width = <4>;

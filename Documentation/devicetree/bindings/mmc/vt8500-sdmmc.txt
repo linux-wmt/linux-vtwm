@@ -14,7 +14,7 @@ Examples:
 
 sdhc@d800a000 {
 	compatible = "wm,wm8505-sdhc";
-	reg = <0xd800a000 0x1000>;
+	reg = <0xd800a000 0x400>;
 	interrupts = <20 21>;
 	clocks = <&sdhc>;
 	bus-width = <4>;
