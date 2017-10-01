@@ -487,6 +487,7 @@ static int mtdsf_init_device(struct device *dev, struct mtd_info *mtd,
 	mtd->_read = sf_read;
 	mtd->_write = sf_write;
 	mtd->writesize = 1;
+	mtd_set_of_node(mtd, dev->of_node);
 
 	if (mtd_device_parse_register(mtd, NULL, NULL, NULL, 0)) {
 		dev_err(dev, "Erroring adding MTD device\n");
