@@ -172,14 +172,14 @@
 			interrupts = <10>;
 		};
 
-        keyboard@d8008800 {
-            compatible = "intel,8042";
-            reg = <0xD8008800 0x100>;
-            interrupts = <46 45>;
-            command-reg = <0x04>;
-            status-reg = <0x04>;
-            data-reg = <0x00>;
-            mux-ports = <2>;
-        };
+		keyboard@d8008800 {
+			compatible = "intel,8042";
+			reg = <0xD8008800 0x100>;
+			interrupts = <46>, <45>;
+			command-reg = <0x04>;
+			status-reg = <0x04>;
+			data-reg = <0x00>;
+			init-reset;
+		};
 	};
 };
